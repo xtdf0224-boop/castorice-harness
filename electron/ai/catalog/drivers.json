@@ -1,0 +1,14 @@
+[
+{"id":"claude-code","label":"Claude Code","bin":"claude","install":"npm install -g @anthropic-ai/claude-code","auth":"account","approvals":"per-call","homepage":"https://code.claude.com/docs/",
+ "note":"默认用你自己电脑上已登录的 claude（Pro / Max 订阅）：栖枝只拉起它，不替你登录，也不读取或保存令牌。写文件、执行命令前会在栖枝里征求你的确认；模型的提问和计划也会回到栖枝。",
+ "loginArgs":["auth","login"],"loginHint":"按提示在浏览器里登录 Claude 账号。"},
+{"id":"codex","label":"Codex CLI","bin":"codex","install":"npm install -g @openai/codex","auth":"account","approvals":"sandbox","homepage":"https://github.com/openai/codex",
+ "note":"用 ChatGPT 账号登录。Codex 的无头模式不能逐项确认，按沙箱策略执行（工作文件夹内可写）。",
+ "loginArgs":["login"],"loginHint":"按提示在浏览器里登录 ChatGPT 账号。"},
+{"id":"dsh","label":"DeepSeek Harness","bin":"dsh","install":"安装 DeepSeek Harness 桌面版（自带 dsh 命令）","auth":"account","approvals":"sandbox","homepage":"https://www.npmjs.com/package/@deepseek-ai/dsh",
+ "note":"用 DeepSeek 账号登录（在 DeepSeek Harness 桌面版里登录一次即可）。无头模式按它自己的权限配置执行，不能逐项确认。",
+ "loginArgs":null,"loginHint":"请在 DeepSeek Harness 桌面版里登录 DeepSeek 账号，登录状态会共享给命令行。"},
+{"id":"claude-compat","label":"Claude Code（兼容端点）","bin":"claude","install":"npm install -g @anthropic-ai/claude-code","auth":"key","approvals":"per-call","homepage":"https://code.claude.com/docs/",
+ "note":"用这家的 API Key 驱动 Claude Code（厂商官方提供的 Anthropic 兼容端点）。登录信息与你自己的 Claude Code 分开保存；写文件、执行命令前会征求确认。",
+ "loginArgs":null,"loginHint":""}
+]

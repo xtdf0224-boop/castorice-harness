@@ -1,0 +1,380 @@
+/* 栖枝 · Alight — design tokens
+   两套主题挂在 <html data-mode="night|day">：
+     · 夜 · 冥河（默认）：紫黑打底，银白与藕紫作正文与线；蓝只给蝶、「现在」与运行中；金只给「待你」。
+     · 昼 · 花海：薰衣草底、奶油纸面、深紫强调。
+   色值取自 design/mockups/night|day/index.html 的实际值（强调色 = 她的发色藕紫 #ad90b7 → #d6c1e0）。
+   组件只读语义令牌；需要带透明度的颜色用 rgb(var(--x-rgb) / a)，两套主题各自给出三元组。 */
+
+:root {
+  /* ── type ── */
+  --font-sans: "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", "SimSun", serif;
+  /* 字标用的西文大写（ALIGHT、版本号）：Cinzel（SIL OFL 1.1，Latin 子集 woff 随应用附带，@font-face 在 decor.css）；
+     万一没加载上，回落到 Windows 自带的 Roman 大写标题体，最后是思源宋体。 */
+  --font-display: "Cinzel", "Perpetua Titling MT", "Constantia", "Noto Serif SC", Georgia, serif;
+  --font-mono: "Sarasa Mono SC", "JetBrains Mono", "Cascadia Mono", Consolas, "Microsoft YaHei UI", monospace;
+  /* Scale: every text size is one of these. */
+  --fs-2xs: 11px;  /* meta, kbd, tags */
+  --fs-xs: 12px;   /* captions, table meta */
+  --fs-sm: 13px;   /* secondary text, logs */
+  --fs-md: 14px;   /* body / controls */
+  --fs-lg: 16px;   /* panel titles */
+  --fs-xl: 21px;   /* page titles (serif) */
+  --fs-2xl: 26px;  /* task title */
+  --fs-hero: 40px; /* welcome headline */
+  --lh-tight: 1.3;
+  --lh: 1.6;
+  --lh-mono: 1.55;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* ── space ── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
+  --gap-shell: 12px;
+
+  /* ── shape ── 窗格 16、按钮 10、芯片 8、纸面 6（DESIGN §6.4） */
+  --r-xs: 4px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --panel-radius: var(--r-lg);
+  --card-radius: var(--r-md);
+  --control-radius: 10px;
+  --chip-radius: var(--r-sm);
+  --paper-radius: 6px;
+  --corner: round;
+
+  /* ── motion ── */
+  --ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --breathe: 4.8s;      /* 灯呼吸 ≤0.25 Hz */
+
+  /* ── layout ── */
+  --nav-w: 216px;
+  --nav-w-collapsed: 64px;
+  --status-w: 272px;
+  --main-max: 860px;    /* 主栏最宽：宽屏时右侧留出壁纸里的她 */
+  --console-bar-h: 40px;
+  --console-now: var(--console-bar-h);     /* 控制台现在的高度（收起 = 一条；展开 = 拖出来的高度），署名等贴底的东西读它 */
+  /* 昼 · 她的拱窗（首页与「待你」右半）：高度随窗口，宽 = 高 × 0.6624（样稿 624 × 942） */
+  --ah: calc(100dvh - 24px);
+  --arch-w: calc(var(--ah) * 0.6624);
+  /* 纸面的蝶纹底（样稿 .sheet::before）与窗台的点状紫边（官方卡面语汇的自绘版） */
+  --paper-pattern: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='-32 -30 64 60'><g fill='%23d9cfee' fill-opacity='.30'><path d='M1.4 -1.5C3.6 -15 15 -27 26.5 -26.2C31.5 -18.5 28.5 -6.5 17.5 -.5C11.5 2.4 5.2 2.6 1.4 1z'/><path d='M1.4 2.4C8.4 3 16.6 7 17.6 14C14.6 20.4 7.4 18.4 3.8 11.4C2.2 8.2 1.4 5.2 1.4 2.4z'/><path d='M-1.4 -1.5C-3.6 -15 -15 -27 -26.5 -26.2C-31.5 -18.5 -28.5 -6.5 -17.5 -.5C-11.5 2.4 -5.2 2.6 -1.4 1z'/><path d='M-1.4 2.4C-8.4 3 -16.6 7 -17.6 14C-14.6 20.4 -7.4 18.4 -3.8 11.4C-2.2 8.2 -1.4 5.2 -1.4 2.4z'/></g></svg>");
+  --hem-img: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='30' height='9'><rect width='30' height='9' fill='%2368328c'/><ellipse cx='7' cy='4.6' rx='5.6' ry='2.4' transform='rotate(-14 7 4.6)' fill='%23ddc6da'/><ellipse cx='19.5' cy='3.6' rx='3.6' ry='1.8' transform='rotate(-20 19.5 3.6)' fill='%23ddc6da' opacity='.9'/><ellipse cx='25.5' cy='6.6' rx='2.6' ry='1.4' fill='%23ddc6da' opacity='.8'/></svg>");
+}
+:root[data-console="open"] { --console-now: min(var(--console-h, 280px), 70dvh); }
+
+/* ═══════════════ 夜 · 冥河（默认） ═══════════════ */
+:root, :root[data-mode="night"] {
+  color-scheme: dark;
+
+  /* 三元组：用于 rgb(var(--x-rgb) / a) */
+  --accent-rgb: 214 193 224;
+  --blue-rgb: 124 200 247;
+  --gold-rgb: 230 200 138;
+  --ok-rgb: 180 210 122;
+  --danger-rgb: 242 139 163;
+  --ink-rgb: 244 240 247;        /* 浅字 */
+  --veil-rgb: 13 11 27;          /* 烟色玻璃与暗角的底色 */
+  --shadow-rgb: 0 0 0;
+  --hair-rgb: 214 190 226;       /* 发丝线 */
+  --plate-rgb: 134 92 152;       /* 选中行的藕紫 */
+
+  /* grounds（壁纸关闭或加载前；对话框、菜单、提示条始终用 solid） */
+  --bg-0: #0a0913;
+  --bg-1: #0e0c19;
+  --solid: #1b1730;
+  --solid-raised: #262040;
+  --solid-sunken: #0a0913;
+
+  /* surfaces（有壁纸时由 :root[data-wallpaper="on"] 换成烟色玻璃） */
+  --surface: rgb(27 23 48 / 0.82);
+  --surface-strong: rgb(18 15 33 / 0.94);   /* 代码、日志、终端：近乎不透明 */
+  --surface-raised: rgb(38 32 64 / 0.86);
+  --surface-sunken: rgb(10 9 19 / 0.6);
+  --surface-hover: rgb(var(--accent-rgb) / 0.08);
+  --surface-active: rgb(var(--plate-rgb) / 0.3);
+  --scrim: rgb(8 6 18 / 0.66);
+
+  /* lines */
+  --line: rgb(var(--hair-rgb) / 0.16);
+  --line-2: rgb(var(--hair-rgb) / 0.28);
+  --line-strong: #ad90b7;
+
+  /* text */
+  --text: #f4f0f7;
+  --text-2: #d8cfe0;
+  --text-3: #c0b4cf;
+  --text-4: #8a7d9b;   /* decoration and disabled only — never body text */
+
+  /* accent：她的发色藕紫 */
+  --accent: #d6c1e0;
+  --accent-strong: #efe3f3;
+  --accent-fill: #c6aed3;
+  --accent-soft: rgb(var(--accent-rgb) / 0.13);
+  --accent-line: rgb(var(--accent-rgb) / 0.42);
+  --on-accent: #1f1030;
+  --btn-primary-top: #d6c1e0;
+  --btn-primary-bottom: #bfa6cd;
+  --btn-primary-hover: #e4d3ec;
+  --on-primary: #1f1030;
+
+  /* 她身上的颜色（点缀，不当底色） */
+  --hair-a: #dad4d8;
+  --hair-b: #ad90b7;
+  --hair-c: #865c98;
+  --cape: #68328c;
+  --cape-deep: #4b2670;
+  --collar: #402a51;
+  --badge-pink: #9e55b3;
+  --coral: #e68aa2;
+  --hair-silver: linear-gradient(180deg, #f1eff8, #ad90b7 55%, #865c98);
+
+  /* 蓝：蝶、现在、运行中 · 金：待你 */
+  --blue: #7cc8f7;
+  --gold: #e6c88a;
+  --gold-soft: rgb(var(--gold-rgb) / 0.13);
+  --gold-top: #f0d9a4;
+  --gold-bottom: #e6c88a;
+  --gold-top-hover: #f6e4bb;
+  --on-gold: #241a06;
+
+  /* 纸面：写给人的东西（归来简、遗物卡、寄语），界面里唯一的亮面 */
+  --paper: #f1edf0;
+  --paper-hi: #f8f5f3;
+  --paper-ink: #241c3a;
+  --paper-ink-2: #41385c;
+  --paper-ink-3: #51486b;
+  --paper-line: #c9bfd6;
+  --paper-edge: #7a6590;
+  --paper-low: #e8e1ea;                       /* 纸的下沿（纸面渐变的末端） */
+  --paper-stack-1: rgb(168 146 212 / 0.82);  /* 奶油面板叠薰衣草底的两层（官方前瞻卡的叠层语汇） */
+  --paper-stack-2: rgb(120 84 150 / 0.55);
+  --banner: #68328c;
+  --banner-ink: #f6f3fa;
+  --viewer-bg: #131313;
+  /* 手套式审批卡：去色的中性深灰，金色左缘；卡上没有装饰与动效 */
+  --glove-bg: rgb(32 31 40 / 0.97);
+
+  /* 状态色（永远配图标与文字） */
+  --tone-neutral: #c9bfd6;   --tone-neutral-soft: rgb(201 191 214 / 0.12);
+  --tone-info: var(--accent); --tone-info-soft: rgb(var(--accent-rgb) / 0.13);
+  --tone-running: var(--blue); --tone-running-soft: rgb(var(--blue-rgb) / 0.13);
+  --tone-success: #b4d27a;   --tone-success-soft: rgb(var(--ok-rgb) / 0.13);
+  --tone-warning: var(--gold); --tone-warning-soft: rgb(var(--gold-rgb) / 0.13);
+  --tone-danger: #f28ba3;    --tone-danger-soft: rgb(var(--danger-rgb) / 0.13);
+  --tone-paused: #a99bbd;    --tone-paused-soft: rgb(169 155 189 / 0.14);
+  --success-top: #c8e08e;
+  --success-top-hover: #d4e8a4;
+  --on-success: #1b2a08;
+  --danger-top: #f6a6b8;
+  --on-danger: #3a0b19;
+
+  /* code and diff */
+  --code-fg: #e6e0ee;
+  --diff-add-fg: #cfe6a2;
+  --diff-del-fg: #f6bccb;
+
+  /* light & depth */
+  --glow-accent: 0 0 0 1px rgb(var(--accent-rgb) / 0.32), 0 0 22px -4px rgb(var(--accent-rgb) / 0.3);
+  --glow-accent-soft: 0 0 18px -6px rgb(var(--accent-rgb) / 0.28);
+  --glow-blue: 0 0 0 1px rgb(var(--blue-rgb) / 0.4), 0 0 18px -4px rgb(var(--blue-rgb) / 0.4);
+  --glow-gold: 0 0 0 1px rgb(var(--gold-rgb) / 0.35), 0 0 18px -6px rgb(var(--gold-rgb) / 0.35);
+  --glow-danger: 0 0 0 1px rgb(var(--danger-rgb) / 0.35), 0 0 18px -8px rgb(var(--danger-rgb) / 0.4);
+  --shadow-panel: 0 14px 40px -24px rgb(0 0 0 / 0.8), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+  --shadow-pop: 0 24px 60px -18px rgb(0 0 0 / 0.8), 0 0 0 1px var(--line-2);
+  --shadow-paper: 0 10px 28px rgb(0 0 0 / 0.36);
+  /* 冥河细线：标题下、进度条里的渐变细线 */
+  --river-a: #865c98;
+  --river-b: #c6aed3;
+  --river-c: #7cc8f7;
+  --river-line: linear-gradient(90deg, transparent, var(--river-a) 14%, var(--river-b) 62%, var(--river-c) 94%, transparent);
+  --river-opacity: 0.55;
+  --text-halo: 0 0 2px rgb(8 6 20 / 0.95), 0 0 6px rgb(8 6 20 / 0.8), 0 1px 14px rgb(8 6 20 / 0.55);
+  --blur: 12px;
+
+  /* wallpaper glass defaults（Wallpaper.tsx 按「面板通透度」覆盖） */
+  --glass-rgb: 13 11 27;
+}
+
+/* ═══════════════ 昼 · 花海 ═══════════════ */
+:root[data-mode="day"] {
+  color-scheme: light;
+
+  --accent-rgb: 90 58 126;
+  --blue-rgb: 42 94 168;
+  --gold-rgb: 133 80 0;
+  --ok-rgb: 74 111 35;
+  --danger-rgb: 176 40 77;
+  --ink-rgb: 46 33 66;
+  --veil-rgb: 253 251 248;
+  --shadow-rgb: 70 45 110;
+  --hair-rgb: 70 45 110;
+  --plate-rgb: 99 64 127;
+
+  --bg-0: #cfc5ec;
+  --bg-1: #dcd5ee;
+  --solid: #fdfbf8;
+  --solid-raised: #ffffff;
+  --solid-sunken: #ece6f8;
+
+  --surface: rgb(253 251 248 / 0.9);
+  --surface-strong: rgb(255 254 251 / 0.97);
+  --surface-raised: rgb(255 255 255 / 0.92);
+  --surface-sunken: rgb(236 230 248 / 0.7);
+  --surface-hover: rgb(var(--plate-rgb) / 0.08);
+  --surface-active: rgb(var(--plate-rgb) / 0.13);
+  --scrim: rgb(60 40 90 / 0.4);
+
+  --line: rgb(var(--hair-rgb) / 0.13);
+  --line-2: rgb(var(--hair-rgb) / 0.22);
+  --line-strong: #78709a;
+
+  --text: #2e2142;
+  --text-2: #52446a;
+  --text-3: #5d5077;
+  --text-4: #a79fbd;
+
+  --accent: #5a3a7e;
+  --accent-strong: #4f2f78;
+  --accent-fill: #63407f;
+  --accent-soft: rgb(var(--accent-rgb) / 0.09);
+  --accent-line: rgb(var(--accent-rgb) / 0.4);
+  --on-accent: #ffffff;
+  --btn-primary-top: #70489a;
+  --btn-primary-bottom: #5a3a7e;
+  --btn-primary-hover: #7d55a8;
+  --on-primary: #ffffff;
+
+  --hair-a: #dad4d8;
+  --hair-b: #ad90b7;
+  --hair-c: #865c98;
+  --cape: #68328c;
+  --cape-deep: #4b2670;
+  --collar: #402a51;
+  --badge-pink: #9e55b3;
+  --coral: #e68aa2;
+  --hair-silver: linear-gradient(180deg, #f1eff8, #ad90b7 55%, #865c98);
+
+  --blue: #2a5ea8;
+  --gold: #6e4200;
+  --gold-soft: rgb(224 173 104 / 0.3);
+  --gold-top: #e8b878;
+  --gold-bottom: #e0ad68;
+  --gold-top-hover: #efc58e;
+  --on-gold: #2a1700;
+
+  --paper: #fcfaf6;
+  --paper-hi: #ffffff;
+  --paper-ink: #2e2142;
+  --paper-ink-2: #52446a;
+  --paper-ink-3: #64577d;
+  --paper-line: #e4dcf0;
+  --paper-edge: #78709a;
+  --paper-low: #f4eff8;
+  --paper-stack-1: rgb(205 193 233 / 0.9);
+  --paper-stack-2: rgb(154 133 200 / 0.55);
+  --banner: #63407f;
+  --banner-ink: #f6f3fa;
+  --viewer-bg: #efefef;
+  --glove-bg: #fffefb;
+
+  --tone-neutral: #64577d;   --tone-neutral-soft: rgb(100 87 125 / 0.1);
+  --tone-info: var(--accent); --tone-info-soft: rgb(var(--accent-rgb) / 0.09);
+  --tone-running: var(--blue); --tone-running-soft: rgb(79 143 216 / 0.13);
+  --tone-success: #4a6f23;   --tone-success-soft: rgb(var(--ok-rgb) / 0.11);
+  --tone-warning: var(--gold); --tone-warning-soft: rgb(224 173 104 / 0.26);
+  --tone-danger: #b0284d;    --tone-danger-soft: rgb(var(--danger-rgb) / 0.09);
+  --tone-paused: #6f6490;    --tone-paused-soft: rgb(111 100 144 / 0.12);
+  --success-top: #7fa653;
+  --success-top-hover: #8db561;
+  --on-success: #ffffff;
+  --danger-top: #c84a6a;
+  --on-danger: #ffffff;
+
+  --code-fg: #3a2d52;
+  --diff-add-fg: #2f5410;
+  --diff-del-fg: #8f1d3d;
+
+  --glow-accent: 0 0 0 1px rgb(var(--accent-rgb) / 0.28), 0 0 18px -6px rgb(var(--accent-rgb) / 0.25);
+  --glow-accent-soft: 0 0 14px -6px rgb(var(--accent-rgb) / 0.22);
+  --glow-blue: 0 0 0 1px rgb(var(--blue-rgb) / 0.35), 0 0 16px -6px rgb(var(--blue-rgb) / 0.3);
+  --glow-gold: 0 0 0 1px rgb(194 142 68 / 0.5), 0 0 16px -6px rgb(194 142 68 / 0.4);
+  --glow-danger: 0 0 0 1px rgb(var(--danger-rgb) / 0.35), 0 0 16px -8px rgb(var(--danger-rgb) / 0.3);
+  --shadow-panel: 0 1px 2px rgb(70 45 110 / 0.06), 0 8px 24px -10px rgb(70 45 110 / 0.18);
+  --shadow-pop: 0 2px 5px rgb(70 45 110 / 0.08), 0 18px 40px -12px rgb(70 45 110 / 0.28), 0 0 0 1px var(--line-2);
+  --shadow-paper: 0 2px 5px rgb(70 45 110 / 0.07), 0 14px 32px rgb(70 45 110 / 0.13);
+  --river-a: #63407f;
+  --river-b: #9985c8;
+  --river-c: #4f8fd8;
+  --river-line: linear-gradient(90deg, transparent, var(--river-b) 14%, var(--river-a) 60%, var(--river-c) 94%, transparent);
+  --river-opacity: 0.7;
+  --text-halo: 0 0 1px rgb(255 255 255 / 0.6), 0 0 6px rgb(255 255 255 / 0.5);
+  --blur: 14px;
+
+  --glass-rgb: 253 251 248;
+}
+
+/* Reduced motion: set by the app on <html data-motion="reduced"> (from Settings or the OS). */
+:root[data-motion="reduced"] {
+  --dur-1: 0ms;
+  --dur-2: 0ms;
+  --dur-3: 0ms;
+}
+
+/* ── Wallpaper on: thin smoked glass + text halos ──
+   --glass-a / --glass-blur come from 面板通透度 (Wallpaper.tsx). 面板保持很薄，让她透出来；
+   可读性靠每个字形周围的光晕（--text-halo，app.css）与正文对比度 ≥ 4.5:1（见 docs 里的度量脚本）。
+   代码、日志、输入框保留更实的底。 */
+:root[data-wallpaper="on"] {
+  --surface: rgb(var(--glass-rgb) / var(--glass-a, 0.5));
+  --surface-raised: rgb(var(--glass-rgb) / calc(var(--glass-a, 0.5) + 0.22));
+  --surface-sunken: rgb(var(--glass-rgb) / 0.62);
+  --blur: var(--glass-blur, 12px);
+}
+:root[data-wallpaper="on"][data-mode="night"], :root[data-wallpaper="on"]:not([data-mode]) {
+  --surface-raised: rgb(34 27 58 / calc(var(--glass-a, 0.5) + 0.22));
+}
+:root[data-wallpaper="on"][data-mode="day"] {
+  --surface-raised: rgb(255 255 255 / calc(var(--glass-a, 0.6) + 0.18));
+  --surface-sunken: rgb(236 230 248 / 0.66);
+}
+
+/* ═══════════════ Agent 页 + 台词组合：新令牌（施工图 §4.1，步骤 0 由集成者写，之后只读） ═══════════════
+   她的气泡 / 用户气泡 / 塔罗牌 / 头像状态外环（D2：外环编码运行状态，不编码表情）/ 白·银·黑三档圆点. */
+:root, :root[data-mode="night"] {
+  --her-bg: rgba(32, 25, 56, .78);
+  --her-line: rgba(214, 190, 226, .26);
+  --me-bg: linear-gradient(180deg, #7c4ca3, #5a2f84);
+  --me-fg: #f4f0f7;
+  --card-ground: linear-gradient(180deg, #2c2150, #1f1838 46%, #271c46);
+  --card-frame: linear-gradient(#f6f1e6, #e2d9c3);
+  --card-tan: #c8b99a;
+  --ring-idle: var(--accent);
+  --ring-work: var(--blue);
+  --ring-wait: var(--gold);
+  --silver: #d8d6e8;
+  --tier-auto: #fbf9ff;
+  --tier-confirm: var(--silver);
+  --tier-off: #17121f;
+}
+:root[data-mode="day"] {
+  --her-bg: #fffefb;
+  --her-line: #ddd3ee;
+  --me-bg: linear-gradient(180deg, #6f4a93, #58377d);
+  --me-fg: #fff;
+  --card-ground: linear-gradient(180deg, #f8f4ea, #f3ede0);
+  --card-frame: linear-gradient(#f6f1e6, #e2d9c3);
+  --card-tan: #c8b99a;
+  --ring-idle: var(--accent);
+  --ring-work: var(--blue);
+  --ring-wait: var(--gold);
+  --silver: #5d5880;
+  --tier-auto: #fff;
+  --tier-confirm: #5d5880;
+  --tier-off: #2e2142;
+}

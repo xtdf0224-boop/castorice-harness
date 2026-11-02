@@ -1,0 +1,244 @@
+/* 栖枝 · 引擎模块（B3）的卡片：审批卡、提问卡、计划审批、模型接入里的 Claude 认证。
+   只读语义令牌（--surface … --gold --tone-* --line --text-* --r-*），夜 / 昼两套主题自动跟随。
+   视觉语言取自样稿 s2 的手套卡：去色的中性深灰（--glove-bg）、金色 3px 左缘、卡上没有头像、没有装饰、没有动效。
+   类名都带 eng- 前缀，不借用别的模块的类。 */
+
+.eng-card {
+  --c: var(--gold);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  padding: var(--sp-3) var(--sp-4) var(--sp-3) calc(var(--sp-4) + 3px);
+  border-radius: 4px var(--card-radius, var(--r-md)) var(--card-radius, var(--r-md)) 4px;
+  background: var(--glove-bg, var(--surface-strong));
+  box-shadow: inset 3px 0 0 var(--c), inset 0 0 0 1px var(--line), var(--shadow-panel);
+  color: var(--text);
+  text-shadow: none;
+}
+.eng-card:focus { outline: none; }
+.eng-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 已处理：金缘退掉，卡片退到背景里 */
+.eng-card.is-decided { --c: var(--tone-neutral); background: var(--surface-strong); box-shadow: inset 0 0 0 1px var(--line); }
+.eng-card.is-decided .eng-card__title { color: var(--text-2); }
+.eng-card--compact { padding: var(--sp-3) var(--sp-3) var(--sp-3) calc(var(--sp-3) + 3px); gap: 6px; }
+
+.eng-card__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2) var(--sp-3); min-width: 0; }
+.eng-card__title { flex: 1 1 12em; min-width: 0; margin: 0; font-size: var(--fs-lg); font-weight: var(--fw-semibold); line-height: var(--lh-tight); letter-spacing: 0.02em; overflow-wrap: anywhere; }
+.eng-card--compact .eng-card__title { font-size: var(--fs-md); }
+.eng-card__time { margin-left: auto; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.eng-card__lead { margin: 0; font-size: var(--fs-sm); line-height: 1.55; color: var(--text); overflow-wrap: anywhere; }
+.eng-card__task { display: flex; align-items: baseline; gap: 2px; min-width: 0; margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
+.eng-card__task > span { flex: none; }
+
+.eng-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 22px; padding: 0 8px; border-radius: 7px;
+  box-shadow: inset 0 0 0 1px rgb(var(--gold-rgb) / 0.6);
+  color: var(--gold);
+  font-size: var(--fs-xs); font-weight: var(--fw-semibold); line-height: 20px; white-space: nowrap;
+}
+.eng-tag--calm { box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); }
+/* 不可逆项的标签「须亲批 · 不可逆」：金色胶囊 */
+.eng-tag--gold { background: var(--gold-soft); box-shadow: inset 0 0 0 1px var(--gold); }
+
+/* 事实栅格：谁在请求、什么工具、风险 */
+.eng-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px var(--sp-3); margin: 0; font-size: var(--fs-sm); line-height: 1.55; }
+.eng-facts dt { color: var(--text-3); }
+.eng-facts dd { margin: 0; min-width: 0; color: var(--text); overflow-wrap: anywhere; }
+.eng-facts .is-risk-high { color: var(--tone-danger); font-weight: var(--fw-semibold); }
+
+.eng-card__preview[hidden] { display: none; }
+/* 命令预览：文件名不在中间折行（每个参数是不可拆的 span），只有一个参数也放不下时才由 overflow-wrap 兜底 / 横向滚动 */
+.eng-card .eng-cmd.code--wrap .code__pre { white-space: pre-wrap; word-break: normal; overflow-wrap: anywhere; }
+.eng-arg { white-space: nowrap; }
+.eng-cmd__line { display: block; }
+.eng-card__preview .code__pre { max-height: 180px !important; }
+.eng-toggle {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 4px;
+  height: 24px; padding: 0 6px 0 2px; border-radius: 4px;
+  color: var(--text-2); font-size: var(--fs-xs); font-weight: var(--fw-medium);
+}
+.eng-toggle:hover { color: var(--text); background: var(--surface-hover); }
+
+.eng-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); margin-top: 2px; }
+.eng-actions .eng-note { flex: 1 1 100%; }
+.eng-card--compact .eng-actions .btn { flex: 1 1 auto; }
+.eng-note { margin: 0; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-3); }
+.eng-decided { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-xs); color: var(--text-3); }
+
+/* ───────────── 提问卡 ───────────── */
+
+.eng-q { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+.eng-q + .eng-q { padding-top: var(--sp-3); border-top: 1px solid var(--line); }
+.eng-q__head { display: flex; align-items: baseline; gap: var(--sp-2); min-width: 0; }
+.eng-q__chip { flex: none; padding: 0 8px; border-radius: var(--chip-radius, var(--r-sm)); box-shadow: inset 0 0 0 1px var(--line-2); font-size: var(--fs-xs); color: var(--text-2); line-height: 20px; }
+.eng-q__text { margin: 0; font-size: var(--fs-md); line-height: 1.55; color: var(--text); overflow-wrap: anywhere; }
+.eng-opts { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.eng-opt {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;
+  padding: 8px 12px; border-radius: var(--r-sm);
+  background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--text); text-align: left; font-size: var(--fs-sm);
+}
+.eng-opt:hover { background: var(--surface-hover); box-shadow: inset 0 0 0 1px var(--line-2); }
+.eng-opt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eng-opt[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.eng-opt strong { font-weight: var(--fw-semibold); }
+.eng-opt small { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.45; }
+.eng-other { display: flex; gap: var(--sp-2); align-items: center; }
+.eng-other .input { flex: 1; min-width: 0; }
+.eng-answered { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+.eng-answered b { color: var(--text); font-weight: var(--fw-semibold); }
+
+/* ───────────── 计划审批 ───────────── */
+
+.eng-plan { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-top: 1px solid var(--line); background: var(--surface-sunken); }
+.eng-plan__lead { margin: 0; font-size: var(--fs-sm); color: var(--text); line-height: 1.55; }
+.eng-plan__bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.eng-plan__revise { display: flex; gap: var(--sp-2); align-items: center; }
+.eng-plan__revise .input { flex: 1; min-width: 0; }
+.eng-editor { display: flex; flex-direction: column; gap: var(--sp-2); margin: 0; padding: var(--sp-3) var(--sp-4); list-style: none; }
+.eng-step {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px var(--sp-2); align-items: start;
+  padding: var(--sp-2); border-radius: var(--r-sm); background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line);
+}
+.eng-step__n { grid-row: 1; margin-top: 6px; font-size: var(--fs-xs); color: var(--text-3); text-align: center; font-variant-numeric: tabular-nums; }
+.eng-step__body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.eng-step__body .input, .eng-step__body textarea { width: 100%; }
+.eng-step__body textarea { min-height: 52px; resize: vertical; font: inherit; }
+.eng-step__tools { display: flex; flex-direction: column; gap: 2px; }
+.eng-step__agent { font-size: var(--fs-xs); color: var(--text-3); }
+
+/* ───────────── 模型接入 · Claude 的三条路 ───────────── */
+
+.eng-auth { display: flex; flex-direction: column; gap: var(--sp-3); padding: var(--sp-3); border-radius: var(--r-md); background: var(--surface-sunken); box-shadow: inset 0 0 0 1px var(--line); }
+.eng-auth__title { display: flex; align-items: center; gap: var(--sp-2); margin: 0; font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text); }
+.eng-auth__paths { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.eng-path {
+  display: flex; align-items: flex-start; gap: var(--sp-3); width: 100%;
+  padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm);
+  background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text); text-align: left;
+}
+.eng-path:hover { box-shadow: inset 0 0 0 1px var(--line-2); }
+.eng-path:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eng-path[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.eng-path__mark { flex: none; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line-strong); }
+.eng-path[aria-pressed="true"] .eng-path__mark { box-shadow: inset 0 0 0 5px var(--accent); }
+.eng-path__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.eng-path__text strong { font-size: var(--fs-sm); font-weight: var(--fw-semibold); }
+.eng-path__text small { font-size: var(--fs-xs); line-height: 1.5; color: var(--text-3); }
+.eng-bill { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-sm); background: var(--gold-soft); box-shadow: inset 3px 0 0 var(--gold), inset 0 0 0 1px var(--line); }
+.eng-bill__label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--gold); }
+.eng-bill p { margin: 0; font-size: var(--fs-xs); line-height: 1.55; color: var(--text-2); }
+.eng-budget { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2) var(--sp-3); }
+.eng-budget label { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-xs); color: var(--text-3); }
+.eng-budget .input { width: 100%; }
+.eng-spend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-3); margin: 0; font-size: var(--fs-xs); color: var(--text-2); font-variant-numeric: tabular-nums; }
+.eng-spend b { color: var(--text); font-weight: var(--fw-semibold); }
+.eng-spend .is-warn { color: var(--tone-warning); }
+.eng-spend .is-stop { color: var(--tone-danger); }
+.eng-check { display: flex; align-items: flex-start; gap: var(--sp-2); font-size: var(--fs-xs); line-height: 1.5; color: var(--text-2); }
+.eng-check input { margin-top: 2px; }
+.eng-exe { margin: 0; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-3); overflow-wrap: anywhere; }
+
+@media (max-width: 640px) {
+  .eng-budget { grid-template-columns: 1fr; }
+  .eng-step { grid-template-columns: 20px minmax(0, 1fr); }
+  .eng-step__tools { grid-column: 2; flex-direction: row; }
+}
+
+/* ───────────── 遗物卡与未竟之信（AGENT-VOICE-PLAN §4.4，样稿 C 的 .letter2；内容层：无头像、无贴纸、无意象；C1） ─────────────
+   纸面夜昼同色（--paper*），左 4px 渐变条，横幅右收尖；按钮在纸外（.her-card__actions），用界面自己的按钮样式. */
+.her-card-set { display: flex; flex-direction: column; gap: var(--sp-2); min-width: 0; }
+/* 第 3 轮：卡身（纸面）只画在横幅下面的内容区，横幅右边收尖处露出的是卡外的背景，不再是米白底的两块楔；
+   阴影用 filter 跟着横幅的尖角走（clip-path 会把横幅自己的 box-shadow 裁掉）. 折成一行的卡（--folded）没有横幅，自己画纸面. */
+.her-card {
+  container: hcard / inline-size;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 5px 14px 14px 5px;
+  background: transparent;
+  color: var(--paper-ink, #2e2142);
+  filter: drop-shadow(0 8px 14px rgb(0 0 0 / 0.3));
+  text-shadow: none;
+}
+.her-card__body {
+  background: var(--paper-hi, #fcfaf6);
+  border-radius: 0 0 14px 5px;
+  box-shadow: inset 0 0 0 1px rgb(205 193 233 / 0.7);
+}
+.her-card *, .her-card *::before, .her-card *::after { text-shadow: none; }
+.her-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; z-index: 2; background: linear-gradient(180deg, #8f67b6, #68328c); }
+.her-card__banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 38px;
+  padding: 0 18px 0 22px;
+  background: linear-gradient(90deg, #563673, #6b4690);
+  color: #f6f3fa;
+  border-top-left-radius: 5px;
+  clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 50%, calc(100% - 26px) 100%, 0 100%);
+}
+.her-card__banner b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 16px / 38px var(--font-serif); letter-spacing: 0.04em; }
+.her-card__banner small { margin: 0 34px 0 auto; flex: none; font-size: 12.5px; letter-spacing: 0.06em; opacity: 0.92; }
+.her-card__banner--letter { background: linear-gradient(90deg, #4b4a5c, #5f5d74); }
+.her-card__body { padding: 12px 20px 14px 24px; }
+.her-card__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 22px; margin: 10px 0 0; }
+.her-card__body > .her-card__grid:first-child { margin-top: 0; }
+.her-card__cell { min-width: 0; }
+.her-card__cell dt { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; line-height: 18px; color: var(--paper-ink-3, #51486b); }
+.her-card__cell dd { margin: 2px 0 0; font-size: 13.5px; line-height: 21px; overflow-wrap: anywhere; }
+.her-card__code { color: var(--paper-ink-3, #51486b); font-size: 12.5px; }
+.her-card__meta { margin: 10px 0 0; padding-top: 7px; border-top: 1px dashed var(--paper-line, #cdc1e4); font-size: 12.5px; line-height: 18px; color: var(--paper-ink-3, #51486b); font-variant-numeric: tabular-nums; }
+.her-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.her-letter__steps { list-style: none; margin: 0; padding: 0; }
+.her-letter__step { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid #e4dcef; font-size: 13.5px; line-height: 20px; }
+.her-letter__step:last-child { border-bottom: 0; }
+.her-letter__step em { font-style: normal; font-size: 12.5px; color: var(--paper-ink-3, #51486b); }
+.her-letter__step[data-tone="ok"] svg, .her-letter__step[data-tone="ok"] em { color: #2f6b45; }
+.her-letter__step[data-tone="bad"] svg, .her-letter__step[data-tone="bad"] em { color: #a3274a; font-weight: 600; }
+.her-letter__step[data-tone="idle"] svg { color: var(--paper-ink-3, #51486b); }
+/* 折成一行（收下 / 放下之后）：没有横幅，自己画纸面；夜里改玻璃底（第 3 轮：纸色长条在暗色中栏里最亮，抢焦点），
+   昼间保留纸色；左侧小条仍是卡的标识（未竟之信 = 3 px 灰紫）. */
+.her-card--folded {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; padding: 8px 14px 8px 20px; font-size: 13.5px; line-height: 22px;
+  background: var(--paper-hi, #fcfaf6);
+  box-shadow: inset 0 0 0 1px rgb(205 193 233 / 0.7);
+}
+:root:not([data-mode="day"]) .her-card--folded {
+  background: var(--her-bg, rgb(255 255 255 / 0.06));
+  box-shadow: inset 0 0 0 1px var(--line, rgb(255 255 255 / 0.12));
+  color: var(--text);
+  filter: none;
+}
+:root:not([data-mode="day"]) .her-card--folded[data-card="letter"]::before { width: 3px; background: #8a7aa8; }
+.her-card__fold-title { font-weight: 600; font-family: var(--font-serif); letter-spacing: 0.04em; }
+.her-card__fold-note { color: var(--paper-ink-3, #51486b); font-size: 12.5px; }
+.her-card--folded .her-act { margin-left: auto; color: var(--paper-ink-2, #41385c); box-shadow: inset 0 0 0 1px var(--paper-line, #cdc1e4); }
+.her-card--folded .her-act:hover:not(:disabled) { background: rgb(107 70 144 / 0.1); color: var(--paper-ink, #2e2142); }
+:root:not([data-mode="day"]) .her-card--folded .her-card__fold-note { color: var(--text-2); }
+:root:not([data-mode="day"]) .her-card--folded .her-act { color: var(--text-2); box-shadow: inset 0 0 0 1px var(--line-2); }
+:root:not([data-mode="day"]) .her-card--folded .her-act:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+/* 遗物卡够宽时四格一排（第 2 轮评审：卡矮一半，对话区在首屏多出 50 px）；未竟之信每格字多，仍是 2×2 */
+@container hcard (min-width: 720px) {
+  .her-relic .her-card__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .her-card__grid { grid-template-columns: 1fr; }
+}
+
+/* 审批卡的差异预览（第 3 轮）：每行左侧 2 px 红绿条用 inset box-shadow 画在行的最左，行首留 8 px，「+」「−」不再被条压住；
+   不折行（white-space: pre），横向只在真有超宽行时才出滚动条. */
+.eng-card__preview .code:not(.code--wrap) .code__pre { white-space: pre; overflow-x: auto; }
+.eng-card__preview .code__line { box-sizing: border-box; padding-left: 8px; }
+/* 第 4 轮：短 diff 不该有滚动条.
+   · 容器 <code> 摊成块、min-width: max-content：行自己不设宽度（也就没有 width:100% + padding 叠出的 8px 溢出），
+     最宽的一行决定可滚动宽度，其余行（含红绿底）跟着它一样宽；没有超宽行时 <code> 就是 pre 的内容宽，scrollWidth = clientWidth.
+   · pre 上下内边距 10 → 8：max-height 180（border-box）下 8 行 × 20.15 = 161 + 20 = 181 会差 1 px 出竖向滚动条，滚动条一出来又吃掉 10 px 宽；
+     改 8 后 8 行 = 177 放得下，9 行起才滚（超过 9 行本来就有「展开全部」）. */
+.eng-card__preview .code:not(.code--wrap) .code__pre > code { display: block; min-width: max-content; }
+.eng-card__preview .code:not(.code--wrap) .code__pre { padding-block: 8px; }

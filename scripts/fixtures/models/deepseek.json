@@ -1,0 +1,44 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "deepseek-flash",
+   "object": "model",
+   "name": "DeepSeek V4.1 Flash",
+   "context_window": 1000000,
+   "max_output_tokens": 384000,
+   "input_modalities": [
+    "text",
+    "image"
+   ],
+   "effort": {
+    "supported_levels": [
+     "none",
+     "low",
+     "high",
+     "max"
+    ],
+    "default_level": "high"
+   }
+  },
+  {
+   "id": "deepseek-v4-pro",
+   "object": "model",
+   "name": "DeepSeek V4 Pro",
+   "context_window": 1000000,
+   "max_output_tokens": 384000,
+   "input_modalities": [
+    "text"
+   ],
+   "effort": {
+    "supported_levels": [
+     "low",
+     "high",
+     "max",
+     "minimal"
+    ],
+    "default_level": "high"
+   }
+  }
+ ]
+}

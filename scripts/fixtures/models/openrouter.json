@@ -1,0 +1,77 @@
+{
+ "data": [
+  {
+   "id": "anthropic/claude-opus-5-5",
+   "name": "Anthropic: Claude Opus 5.5",
+   "context_length": 1000000,
+   "architecture": {
+    "input_modalities": [
+     "text",
+     "image"
+    ],
+    "output_modalities": [
+     "text"
+    ]
+   },
+   "top_provider": {
+    "max_completion_tokens": 128000
+   },
+   "supported_parameters": [
+    "tools",
+    "reasoning",
+    "temperature"
+   ],
+   "reasoning": {
+    "supported_efforts": [
+     "max",
+     "xhigh",
+     "high",
+     "medium",
+     "low",
+     "minimal",
+     "none"
+    ],
+    "default_effort": "medium"
+   }
+  },
+  {
+   "id": "~anthropic/claude-opus-latest",
+   "name": "Anthropic: Claude Opus (latest)",
+   "context_length": 1000000,
+   "architecture": {
+    "input_modalities": [
+     "text"
+    ],
+    "output_modalities": [
+     "text"
+    ]
+   },
+   "supported_parameters": [
+    "tools"
+   ]
+  },
+  {
+   "id": "black-forest-labs/flux-2",
+   "name": "Flux 2",
+   "architecture": {
+    "input_modalities": [
+     "text"
+    ],
+    "output_modalities": [
+     "image"
+    ]
+   }
+  },
+  {
+   "id": "old-lab/old-model",
+   "name": "Old model",
+   "context_length": 8192,
+   "architecture": {
+    "output_modalities": [
+     "text"
+    ]
+   },
+   "expiration_date": "2026-12-31"
+  }
+ ]
+}

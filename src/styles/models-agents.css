@@ -1,0 +1,68 @@
+/* 栖枝 · models-agents.css
+   The parts of 模型接入 and the Agent page that are built on the menu select: the default-vendor row,
+   the model / 推理强度 fields on a vendor card, and the notes (.agent-follow / .agent-warn) under the Agent page's model field.
+   (The tool toggles of the old Agent card are gone: the tarot back in agents-tarot.css has its own.) Tokens only.
+   New class names on purpose: this file loads before views-live.css / views-config.css. */
+
+/* ───────────── 模型接入 · 新建时默认使用 ───────────── */
+.models-default__select { flex: 0 1 360px; min-width: 0; }
+.models-default__empty { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* ───────────── 模型接入 · vendor card fields ───────────── */
+.model-field__hint--warn { color: var(--tone-warning); }
+
+/* One quiet line under the model menu: its context window. */
+.model-field__meta { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); line-height: 1.5; color: var(--text-3); }
+.model-field__meta svg { flex: none; }
+.model-field__meta.is-known { color: var(--text-2); }
+.model-field__meta.is-known svg { color: var(--accent); }
+
+/* 推理强度 when the model cannot be tuned: a flat, non-interactive stand-in for the menu. */
+.model-field__static {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 var(--sp-3);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+  color: var(--text-3);
+  font-size: var(--fs-sm);
+}
+.model-field__static svg { flex: none; }
+
+/* ───────────── Agent card · model, notes ───────────── */
+.agent-follow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px dashed var(--line-2);
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+.agent-follow svg { flex: none; margin-top: 3px; color: var(--accent); }
+
+/* The agent's model is set but its way is not ready: say so, next to the way out. */
+.agent-warn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid color-mix(in srgb, var(--tone-warning) 45%, transparent);
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  background: var(--tone-warning-soft);
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+}
+.agent-warn > svg { flex: none; color: var(--tone-warning); }
+.agent-warn > span { flex: 1 1 14em; min-width: 0; }

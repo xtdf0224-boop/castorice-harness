@@ -1,0 +1,93 @@
+{
+ "data": [
+  {
+   "id": "claude-opus-5-5",
+   "display_name": "Claude Opus 5.5",
+   "max_input_tokens": 1000000,
+   "max_tokens": 128000,
+   "capabilities": {
+    "image_input": {
+     "supported": true
+    },
+    "effort": {
+     "supported": true,
+     "low": {
+      "supported": true
+     },
+     "medium": {
+      "supported": true
+     },
+     "high": {
+      "supported": true
+     },
+     "xhigh": {
+      "supported": true
+     },
+     "max": {
+      "supported": true
+     }
+    },
+    "thinking": {
+     "supported": true,
+     "types": {
+      "adaptive": {
+       "supported": true
+      },
+      "disabled": {
+       "supported": false
+      },
+      "between_tools": {
+       "supported": false
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "claude-sonnet-5-5",
+   "display_name": "Claude Sonnet 5.5",
+   "max_input_tokens": 1000000,
+   "max_tokens": 128000,
+   "capabilities": {
+    "image_input": {
+     "supported": true
+    },
+    "effort": {
+     "supported": true,
+     "low": {
+      "supported": true
+     },
+     "medium": {
+      "supported": true
+     },
+     "high": {
+      "supported": true
+     },
+     "xhigh": {
+      "supported": false
+     },
+     "max": {
+      "supported": false
+     }
+    },
+    "thinking": {
+     "supported": true,
+     "types": {
+      "adaptive": {
+       "supported": true
+      },
+      "disabled": {
+       "supported": false
+      },
+      "between_tools": {
+       "supported": true
+      }
+     }
+    }
+   }
+  }
+ ],
+ "has_more": true,
+ "first_id": "claude-opus-5-5",
+ "last_id": "claude-sonnet-5-5"
+}

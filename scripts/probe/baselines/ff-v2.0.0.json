@@ -1,0 +1,1252 @@
+{
+ "target": "ff",
+ "targetName": "萤火 v2.0.0",
+ "appDir": "<ffbase worktree of 8c4000c>",
+ "version": "2.0.0",
+ "env": {
+  "cpu": "Intel(R) Core(TM) Ultra 9 275HX",
+  "logicalCpus": 24,
+  "ramGB": 31,
+  "os": "Windows_NT 10.0.26300",
+  "node": "v24.19.0",
+  "electron": "45.0.0",
+  "power": "Online",
+  "gpus": "Intel(R) Graphics ",
+  "capturedAt": "2026-10-24T05:23:33.419Z"
+ },
+ "params": {
+  "runs": 7,
+  "idleSec": 300,
+  "sampleSec": 30,
+  "s3runs": 3,
+  "quick": false
+ },
+ "s1": {
+  "runs": [
+   {
+    "ok": true,
+    "cdpUpMs": 876,
+    "sysBusyBeforePct": 9.3,
+    "noisy": false,
+    "navStartMs": 869,
+    "dclMs": 937,
+    "presentMs": 984,
+    "readyMs": 1017,
+    "loadMs": 939,
+    "typed": true,
+    "seededPrefs": 2492,
+    "memory": {
+     "totalMB": 457.9,
+     "totalExGpuMB": 97,
+     "privateWorkingSetMB": 403,
+     "workingSetMB": 668.5,
+     "rendererMB": 45.7,
+     "rendererPrivateWSMB": 33.3,
+     "byKindMB": {
+      "utility:NetworkService": 11.4,
+      "gpu": 360.9,
+      "browser": 39.9,
+      "renderer": 45.7
+     },
+     "byKindPrivateWSMB": {
+      "utility:NetworkService": 7.1,
+      "gpu": 331.6,
+      "browser": 31,
+      "renderer": 33.3
+     },
+     "processCount": 4
+    },
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 883,
+    "sysBusyBeforePct": 10.1,
+    "noisy": false,
+    "navStartMs": 875,
+    "dclMs": 943,
+    "presentMs": 994,
+    "readyMs": 1025,
+    "loadMs": 945,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 877,
+    "sysBusyBeforePct": 6.9,
+    "noisy": false,
+    "navStartMs": 868,
+    "dclMs": 939,
+    "presentMs": 984,
+    "readyMs": 1015,
+    "loadMs": 941,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 882,
+    "sysBusyBeforePct": 9.8,
+    "noisy": false,
+    "navStartMs": 875,
+    "dclMs": 945,
+    "presentMs": 993,
+    "readyMs": 1022,
+    "loadMs": 947,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 135,
+    "sysBusyBeforePct": 24.1,
+    "noisy": true,
+    "navStartMs": 127,
+    "dclMs": 201,
+    "presentMs": 251,
+    "readyMs": 282,
+    "loadMs": 202,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 874,
+    "sysBusyBeforePct": 12,
+    "noisy": false,
+    "navStartMs": 866,
+    "dclMs": 936,
+    "presentMs": 981,
+    "readyMs": 1011,
+    "loadMs": 937,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 885,
+    "sysBusyBeforePct": 12,
+    "noisy": false,
+    "navStartMs": 878,
+    "dclMs": 947,
+    "presentMs": 992,
+    "readyMs": 1023,
+    "loadMs": 949,
+    "typed": true,
+    "seededPrefs": 2492,
+    "errors": []
+   }
+  ],
+  "failed": 0,
+  "first": 1017,
+  "all": {
+   "n": 7,
+   "min": 282,
+   "median": 1017,
+   "mean": 914,
+   "p75": 1023,
+   "p95": 1024,
+   "max": 1025
+  },
+  "afterFirst": {
+   "n": 6,
+   "min": 282,
+   "median": 1019,
+   "mean": 896,
+   "p75": 1023,
+   "p95": 1025,
+   "max": 1025
+  },
+  "electronStartMs": {
+   "n": 7,
+   "min": 127,
+   "median": 869,
+   "mean": 765,
+   "p75": 875,
+   "p95": 877,
+   "max": 878
+  },
+  "pageMs": {
+   "n": 7,
+   "min": 145,
+   "median": 147,
+   "mean": 148,
+   "p75": 149,
+   "p95": 154,
+   "max": 155
+  },
+  "memoryAtReadyPlus2_5s": {
+   "totalMB": 457.9,
+   "totalExGpuMB": 97,
+   "privateWorkingSetMB": 403,
+   "workingSetMB": 668.5,
+   "rendererMB": 45.7,
+   "rendererPrivateWSMB": 33.3,
+   "byKindMB": {
+    "utility:NetworkService": 11.4,
+    "gpu": 360.9,
+    "browser": 39.9,
+    "renderer": 45.7
+   },
+   "byKindPrivateWSMB": {
+    "utility:NetworkService": 7.1,
+    "gpu": 331.6,
+    "browser": 31,
+    "renderer": 33.3
+   },
+   "processCount": 4
+  },
+  "floor": {
+   "runs": [
+    {
+     "ok": true,
+     "cdpUpMs": 860,
+     "sysBusyBeforePct": 11.9,
+     "noisy": false,
+     "navStartMs": 853,
+     "dclMs": null,
+     "presentMs": 909,
+     "readyMs": 909,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 841,
+     "sysBusyBeforePct": 9.1,
+     "noisy": false,
+     "navStartMs": 835,
+     "dclMs": null,
+     "presentMs": 884,
+     "readyMs": 884,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 855,
+     "sysBusyBeforePct": 9.3,
+     "noisy": false,
+     "navStartMs": 849,
+     "dclMs": null,
+     "presentMs": 902,
+     "readyMs": 902,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 855,
+     "sysBusyBeforePct": 6.7,
+     "noisy": false,
+     "navStartMs": 849,
+     "dclMs": null,
+     "presentMs": 903,
+     "readyMs": 904,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 902,
+     "sysBusyBeforePct": 15.7,
+     "noisy": true,
+     "navStartMs": 893,
+     "dclMs": null,
+     "presentMs": 951,
+     "readyMs": 951,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 927,
+     "sysBusyBeforePct": 25.9,
+     "noisy": true,
+     "navStartMs": 918,
+     "dclMs": null,
+     "presentMs": 978,
+     "readyMs": 978,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    },
+    {
+     "ok": true,
+     "cdpUpMs": 885,
+     "sysBusyBeforePct": 11.8,
+     "noisy": false,
+     "navStartMs": 878,
+     "dclMs": null,
+     "presentMs": 935,
+     "readyMs": 935,
+     "loadMs": null,
+     "typed": true,
+     "seededPrefs": 0,
+     "errors": []
+    }
+   ],
+   "failed": 0,
+   "first": 909,
+   "all": {
+    "n": 7,
+    "min": 884,
+    "median": 909,
+    "mean": 923,
+    "p75": 943,
+    "p95": 970,
+    "max": 978
+   },
+   "afterFirst": {
+    "n": 6,
+    "min": 884,
+    "median": 920,
+    "mean": 926,
+    "p75": 947,
+    "p95": 971,
+    "max": 978
+   },
+   "electronStartMs": {
+    "n": 7,
+    "min": 835,
+    "median": 853,
+    "mean": 868,
+    "p75": 886,
+    "p95": 911,
+    "max": 918
+   },
+   "pageMs": {
+    "n": 7,
+    "min": 49,
+    "median": 56,
+    "mean": 55,
+    "p75": 58,
+    "p95": 59,
+    "max": 60
+   },
+   "memoryAtReadyPlus2_5s": null
+  },
+  "mainProcessInitMs": 16
+ },
+ "s1BootOn": {
+  "runs": [
+   {
+    "ok": true,
+    "cdpUpMs": 894,
+    "sysBusyBeforePct": 10.2,
+    "noisy": false,
+    "navStartMs": 886,
+    "dclMs": 957,
+    "presentMs": 1026,
+    "readyMs": 8871,
+    "loadMs": 959,
+    "typed": true,
+    "seededPrefs": 2490,
+    "memory": {
+     "totalMB": 533.3,
+     "totalExGpuMB": 104.8,
+     "privateWorkingSetMB": 479,
+     "workingSetMB": 762.3,
+     "rendererMB": 53,
+     "rendererPrivateWSMB": 42,
+     "byKindMB": {
+      "renderer": 53,
+      "gpu": 428.5,
+      "browser": 40.5,
+      "utility:NetworkService": 11.3
+     },
+     "byKindPrivateWSMB": {
+      "renderer": 42,
+      "gpu": 399,
+      "browser": 31,
+      "utility:NetworkService": 7.1
+     },
+     "processCount": 4
+    },
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 881,
+    "sysBusyBeforePct": 9.2,
+    "noisy": false,
+    "navStartMs": 869,
+    "dclMs": 947,
+    "presentMs": 1015,
+    "readyMs": 8842,
+    "loadMs": 949,
+    "typed": true,
+    "seededPrefs": 2490,
+    "errors": []
+   },
+   {
+    "ok": true,
+    "cdpUpMs": 880,
+    "sysBusyBeforePct": 6.9,
+    "noisy": false,
+    "navStartMs": 873,
+    "dclMs": 942,
+    "presentMs": 1003,
+    "readyMs": 8830,
+    "loadMs": 944,
+    "typed": true,
+    "seededPrefs": 2490,
+    "errors": []
+   }
+  ],
+  "failed": 0,
+  "first": 8871,
+  "all": {
+   "n": 3,
+   "min": 8830,
+   "median": 8842,
+   "mean": 8848,
+   "p75": 8857,
+   "p95": 8868,
+   "max": 8871
+  },
+  "afterFirst": {
+   "n": 2,
+   "min": 8830,
+   "median": 8836,
+   "mean": 8836,
+   "p75": 8839,
+   "p95": 8841,
+   "max": 8842
+  },
+  "electronStartMs": {
+   "n": 3,
+   "min": 869,
+   "median": 873,
+   "mean": 876,
+   "p75": 880,
+   "p95": 885,
+   "max": 886
+  },
+  "pageMs": {
+   "n": 3,
+   "min": 7957,
+   "median": 7973,
+   "mean": 7972,
+   "p75": 7979,
+   "p95": 7984,
+   "max": 7985
+  },
+  "memoryAtReadyPlus2_5s": {
+   "totalMB": 533.3,
+   "totalExGpuMB": 104.8,
+   "privateWorkingSetMB": 479,
+   "workingSetMB": 762.3,
+   "rendererMB": 53,
+   "rendererPrivateWSMB": 42,
+   "byKindMB": {
+    "renderer": 53,
+    "gpu": 428.5,
+    "browser": 40.5,
+    "utility:NetworkService": 11.3
+   },
+   "byKindPrivateWSMB": {
+    "renderer": 42,
+    "gpu": 399,
+    "browser": 31,
+    "utility:NetworkService": 7.1
+   },
+   "processCount": 4
+  }
+ },
+ "idle": {
+  "durationSec": 300,
+  "sampleSec": 30,
+  "home": {
+   "memory": {
+    "totalMB": 508.9,
+    "totalExGpuMB": 93.6,
+    "privateWorkingSetMB": 456.4,
+    "workingSetMB": 710.1,
+    "rendererMB": 46.3,
+    "rendererPrivateWSMB": 36.6,
+    "byKindMB": {
+     "renderer": 46.3,
+     "gpu": 415.4,
+     "utility:NetworkService": 11.2,
+     "browser": 36
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 36.6,
+     "gpu": 385.9,
+     "utility:NetworkService": 7,
+     "browser": 26.9
+    },
+    "processCount": 4
+   },
+   "cpu": {
+    "totalPct": 2.15,
+    "byKindPct": {
+     "renderer": 0,
+     "gpu": 2.15,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "wallSec": 21.1
+   }
+  },
+  "openMs": 3943,
+  "samples": [
+   {
+    "tSec": 31,
+    "totalMB": 548,
+    "totalExGpuMB": 111.3,
+    "privateWorkingSetMB": 495,
+    "workingSetMB": 751.6,
+    "rendererMB": 63.6,
+    "rendererPrivateWSMB": 53.8,
+    "byKindMB": {
+     "renderer": 63.6,
+     "gpu": 436.7,
+     "utility:NetworkService": 11.1,
+     "browser": 36.5
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 53.8,
+     "gpu": 406.7,
+     "utility:NetworkService": 6.9,
+     "browser": 27.5
+    },
+    "processCount": 4,
+    "cpuPct": 2.21,
+    "cpuByKind": {
+     "renderer": 0.2,
+     "gpu": 1.91,
+     "utility:NetworkService": 0,
+     "browser": 0.1
+    },
+    "sysBusyPct": 21.2
+   },
+   {
+    "tSec": 62,
+    "totalMB": 528.7,
+    "totalExGpuMB": 111.9,
+    "privateWorkingSetMB": 475.3,
+    "workingSetMB": 731.9,
+    "rendererMB": 64.4,
+    "rendererPrivateWSMB": 54.1,
+    "byKindMB": {
+     "renderer": 64.4,
+     "gpu": 416.8,
+     "utility:NetworkService": 11.1,
+     "browser": 36.4
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 54.1,
+     "gpu": 386.9,
+     "utility:NetworkService": 6.9,
+     "browser": 27.4
+    },
+    "processCount": 4,
+    "cpuPct": 1.61,
+    "cpuByKind": {
+     "renderer": 0.1,
+     "gpu": 1.51,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "sysBusyPct": 20.4
+   },
+   {
+    "tSec": 93,
+    "totalMB": 527.8,
+    "totalExGpuMB": 111,
+    "privateWorkingSetMB": 474.5,
+    "workingSetMB": 731.2,
+    "rendererMB": 63.6,
+    "rendererPrivateWSMB": 53.3,
+    "byKindMB": {
+     "renderer": 63.6,
+     "gpu": 416.8,
+     "utility:NetworkService": 11.1,
+     "browser": 36.4
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 53.3,
+     "gpu": 386.9,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 1.5,
+    "cpuByKind": {
+     "renderer": 0.05,
+     "gpu": 1.3,
+     "utility:NetworkService": 0,
+     "browser": 0.15
+    },
+    "sysBusyPct": 17.2
+   },
+   {
+    "tSec": 124,
+    "totalMB": 525.6,
+    "totalExGpuMB": 109.3,
+    "privateWorkingSetMB": 473.1,
+    "workingSetMB": 729.8,
+    "rendererMB": 62,
+    "rendererPrivateWSMB": 52.1,
+    "byKindMB": {
+     "renderer": 62,
+     "gpu": 416.3,
+     "utility:NetworkService": 11,
+     "browser": 36.3
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 52.1,
+     "gpu": 386.7,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 2.37,
+    "cpuByKind": {
+     "renderer": 0.05,
+     "gpu": 2.17,
+     "utility:NetworkService": 0,
+     "browser": 0.15
+    },
+    "sysBusyPct": 25.4
+   },
+   {
+    "tSec": 155,
+    "totalMB": 526.2,
+    "totalExGpuMB": 109.3,
+    "privateWorkingSetMB": 473.3,
+    "workingSetMB": 730.1,
+    "rendererMB": 62,
+    "rendererPrivateWSMB": 52.1,
+    "byKindMB": {
+     "renderer": 62,
+     "gpu": 416.9,
+     "utility:NetworkService": 11,
+     "browser": 36.3
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 52.1,
+     "gpu": 387.1,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 1.01,
+    "cpuByKind": {
+     "renderer": 0.05,
+     "gpu": 0.96,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "sysBusyPct": 6.4
+   },
+   {
+    "tSec": 186,
+    "totalMB": 506,
+    "totalExGpuMB": 109.4,
+    "privateWorkingSetMB": 453.7,
+    "workingSetMB": 710.5,
+    "rendererMB": 62,
+    "rendererPrivateWSMB": 52.1,
+    "byKindMB": {
+     "renderer": 62,
+     "gpu": 396.6,
+     "utility:NetworkService": 11,
+     "browser": 36.3
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 52.1,
+     "gpu": 367.3,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 1.21,
+    "cpuByKind": {
+     "renderer": 0.1,
+     "gpu": 1.11,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "sysBusyPct": 8
+   },
+   {
+    "tSec": 217,
+    "totalMB": 504.9,
+    "totalExGpuMB": 109.6,
+    "privateWorkingSetMB": 452.6,
+    "workingSetMB": 709.5,
+    "rendererMB": 62.3,
+    "rendererPrivateWSMB": 52.4,
+    "byKindMB": {
+     "renderer": 62.3,
+     "gpu": 395.3,
+     "utility:NetworkService": 11,
+     "browser": 36.3
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 52.4,
+     "gpu": 366,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 1.56,
+    "cpuByKind": {
+     "renderer": 0.15,
+     "gpu": 1.41,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "sysBusyPct": 8.9
+   },
+   {
+    "tSec": 248,
+    "totalMB": 504.3,
+    "totalExGpuMB": 109,
+    "privateWorkingSetMB": 452,
+    "workingSetMB": 708.8,
+    "rendererMB": 61.6,
+    "rendererPrivateWSMB": 51.8,
+    "byKindMB": {
+     "renderer": 61.6,
+     "gpu": 395.3,
+     "utility:NetworkService": 11,
+     "browser": 36.3
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 51.8,
+     "gpu": 366,
+     "utility:NetworkService": 6.9,
+     "browser": 27.3
+    },
+    "processCount": 4,
+    "cpuPct": 1.52,
+    "cpuByKind": {
+     "renderer": 0.1,
+     "gpu": 1.32,
+     "utility:NetworkService": 0,
+     "browser": 0.1
+    },
+    "sysBusyPct": 7.7
+   },
+   {
+    "tSec": 279,
+    "totalMB": 504.7,
+    "totalExGpuMB": 109.2,
+    "privateWorkingSetMB": 452.3,
+    "workingSetMB": 709.8,
+    "rendererMB": 61.7,
+    "rendererPrivateWSMB": 51.7,
+    "byKindMB": {
+     "renderer": 61.7,
+     "gpu": 395.5,
+     "utility:NetworkService": 11.1,
+     "browser": 36.4
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 51.7,
+     "gpu": 366.2,
+     "utility:NetworkService": 6.9,
+     "browser": 27.4
+    },
+    "processCount": 4,
+    "cpuPct": 1.61,
+    "cpuByKind": {
+     "renderer": 0.15,
+     "gpu": 1.46,
+     "utility:NetworkService": 0,
+     "browser": 0
+    },
+    "sysBusyPct": 4.2
+   },
+   {
+    "tSec": 310,
+    "totalMB": 505.5,
+    "totalExGpuMB": 110,
+    "privateWorkingSetMB": 453,
+    "workingSetMB": 710.5,
+    "rendererMB": 62.5,
+    "rendererPrivateWSMB": 52.4,
+    "byKindMB": {
+     "renderer": 62.5,
+     "gpu": 395.5,
+     "utility:NetworkService": 11.1,
+     "browser": 36.4
+    },
+    "byKindPrivateWSMB": {
+     "renderer": 52.4,
+     "gpu": 366.2,
+     "utility:NetworkService": 6.9,
+     "browser": 27.4
+    },
+    "processCount": 4,
+    "cpuPct": 2.63,
+    "cpuByKind": {
+     "renderer": 0.51,
+     "gpu": 1.97,
+     "utility:NetworkService": 0,
+     "browser": 0.15
+    },
+    "sysBusyPct": 11.3
+   }
+  ],
+  "final": {
+   "totalMB": 504.8,
+   "totalExGpuMB": 109.4,
+   "privateWorkingSetMB": 452.4,
+   "rendererMB": 61.9,
+   "rendererPrivateWSMB": 52,
+   "workingSetMB": 709.7,
+   "byKindMB": {
+    "renderer": 62.5,
+    "gpu": 395.5,
+    "utility:NetworkService": 11.1,
+    "browser": 36.4
+   },
+   "byKindPrivateWSMB": {
+    "renderer": 52.4,
+    "gpu": 366.2,
+    "utility:NetworkService": 6.9,
+    "browser": 27.4
+   },
+   "processCount": 4,
+   "lastSampleTotalMB": 505.5
+  },
+  "cpu": {
+   "meanPct": 1.67,
+   "maxPct": 2.63,
+   "samples": 9,
+   "pctOfAllCores": 0.07
+  },
+  "sysBusyMeanPct": 13.1,
+  "visibility": "visible",
+  "errors": []
+ },
+ "s3": {
+  "messages": 10000,
+  "stateChars": 1940347,
+  "runs": [
+   {
+    "sysBusyBeforePct": 10.1,
+    "noisy": false,
+    "startupMs": 1066,
+    "homeMemory": {
+     "totalMB": 502.1,
+     "totalExGpuMB": 123,
+     "privateWorkingSetMB": 447.9,
+     "workingSetMB": 716.1,
+     "rendererMB": 70.2,
+     "rendererPrivateWSMB": 58.6,
+     "byKindMB": {
+      "utility:NetworkService": 11.4,
+      "renderer": 70.2,
+      "browser": 41.4,
+      "gpu": 379.1
+     },
+     "byKindPrivateWSMB": {
+      "utility:NetworkService": 7.1,
+      "renderer": 58.6,
+      "browser": 32.4,
+      "gpu": 349.7
+     },
+     "processCount": 4
+    },
+    "titleMs": 5990,
+    "openToSettledMs": 5990,
+    "openBlockedMs": 5052,
+    "openLongTask": {
+     "count": 4,
+     "maxMs": 2757
+    },
+    "dom": {
+     "nodes": 135494,
+     "textareas": 1
+    },
+    "openMemory": {
+     "totalMB": 1147.7,
+     "totalExGpuMB": 723.2,
+     "privateWorkingSetMB": 1087.1,
+     "workingSetMB": 1347.1,
+     "rendererMB": 670.3,
+     "rendererPrivateWSMB": 652,
+     "byKindMB": {
+      "utility:NetworkService": 11.4,
+      "renderer": 670.3,
+      "browser": 41.5,
+      "gpu": 424.5
+     },
+     "byKindPrivateWSMB": {
+      "utility:NetworkService": 7.1,
+      "renderer": 652,
+      "browser": 32.5,
+      "gpu": 395.4
+     },
+     "processCount": 4
+    },
+    "typing": {
+     "n": 30,
+     "medianMs": 958,
+     "p95Ms": 965,
+     "maxMs": 998
+    },
+    "maxBlockedMs": 5052,
+    "unresponsiveRisk": true,
+    "errors": []
+   },
+   {
+    "sysBusyBeforePct": 1.9,
+    "noisy": false,
+    "startupMs": 1032,
+    "homeMemory": {
+     "totalMB": 545.6,
+     "totalExGpuMB": 123,
+     "privateWorkingSetMB": 491.2,
+     "workingSetMB": 758.3,
+     "rendererMB": 69.9,
+     "rendererPrivateWSMB": 58.7,
+     "byKindMB": {
+      "renderer": 69.9,
+      "browser": 41.9,
+      "gpu": 422.6,
+      "utility:NetworkService": 11.3
+     },
+     "byKindPrivateWSMB": {
+      "renderer": 58.7,
+      "browser": 32.5,
+      "gpu": 393.1,
+      "utility:NetworkService": 7
+     },
+     "processCount": 4
+    },
+    "titleMs": 5097,
+    "openToSettledMs": 5097,
+    "openBlockedMs": 5022,
+    "openLongTask": {
+     "count": 4,
+     "maxMs": 2560
+    },
+    "dom": {
+     "nodes": 135494,
+     "textareas": 1
+    },
+    "openMemory": {
+     "totalMB": 1186.5,
+     "totalExGpuMB": 733.8,
+     "privateWorkingSetMB": 1125,
+     "workingSetMB": 1384.4,
+     "rendererMB": 680.6,
+     "rendererPrivateWSMB": 662.6,
+     "byKindMB": {
+      "renderer": 680.6,
+      "browser": 41.9,
+      "gpu": 452.7,
+      "utility:NetworkService": 11.3
+     },
+     "byKindPrivateWSMB": {
+      "renderer": 662.6,
+      "browser": 32.5,
+      "gpu": 422.9,
+      "utility:NetworkService": 7
+     },
+     "processCount": 4
+    },
+    "typing": {
+     "n": 30,
+     "medianMs": 956,
+     "p95Ms": 965,
+     "maxMs": 995
+    },
+    "maxBlockedMs": 5022,
+    "unresponsiveRisk": true,
+    "errors": []
+   },
+   {
+    "sysBusyBeforePct": 11.6,
+    "noisy": false,
+    "startupMs": 1046,
+    "homeMemory": {
+     "totalMB": 492.7,
+     "totalExGpuMB": 125.8,
+     "privateWorkingSetMB": 438.4,
+     "workingSetMB": 704.1,
+     "rendererMB": 73.4,
+     "rendererPrivateWSMB": 62,
+     "byKindMB": {
+      "gpu": 366.8,
+      "renderer": 73.4,
+      "browser": 41.1,
+      "utility:NetworkService": 11.4
+     },
+     "byKindPrivateWSMB": {
+      "gpu": 337.2,
+      "renderer": 62,
+      "browser": 32,
+      "utility:NetworkService": 7.1
+     },
+     "processCount": 4
+    },
+    "titleMs": 5202,
+    "openToSettledMs": 5202,
+    "openBlockedMs": 5062,
+    "openLongTask": {
+     "count": 4,
+     "maxMs": 2632
+    },
+    "dom": {
+     "nodes": 135494,
+     "textareas": 1
+    },
+    "openMemory": {
+     "totalMB": 1134.3,
+     "totalExGpuMB": 725.5,
+     "privateWorkingSetMB": 1073.3,
+     "workingSetMB": 1330.9,
+     "rendererMB": 673,
+     "rendererPrivateWSMB": 654.9,
+     "byKindMB": {
+      "gpu": 408.7,
+      "renderer": 673,
+      "browser": 41.2,
+      "utility:NetworkService": 11.4
+     },
+     "byKindPrivateWSMB": {
+      "gpu": 379.3,
+      "renderer": 654.9,
+      "browser": 32.1,
+      "utility:NetworkService": 7.1
+     },
+     "processCount": 4
+    },
+    "typing": {
+     "n": 30,
+     "medianMs": 957,
+     "p95Ms": 965,
+     "maxMs": 988
+    },
+    "maxBlockedMs": 5062,
+    "unresponsiveRisk": true,
+    "errors": []
+   }
+  ],
+  "failed": 0,
+  "startupMs": {
+   "n": 3,
+   "min": 1032,
+   "median": 1046,
+   "mean": 1048,
+   "p75": 1056,
+   "p95": 1064,
+   "max": 1066
+  },
+  "openToSettledMs": {
+   "n": 3,
+   "min": 5097,
+   "median": 5202,
+   "mean": 5430,
+   "p75": 5596,
+   "p95": 5911,
+   "max": 5990
+  },
+  "rendererMB_afterOpen": {
+   "n": 3,
+   "min": 670.3,
+   "median": 673,
+   "mean": 674.6,
+   "p75": 676.8,
+   "p95": 679.8,
+   "max": 680.6
+  },
+  "rendererPrivateWSMB_afterOpen": {
+   "n": 3,
+   "min": 652,
+   "median": 654.9,
+   "mean": 656.5,
+   "p75": 658.8,
+   "p95": 661.8,
+   "max": 662.6
+  },
+  "totalMB_afterOpen": {
+   "n": 3,
+   "min": 1134.3,
+   "median": 1147.7,
+   "mean": 1156.2,
+   "p75": 1167.1,
+   "p95": 1182.6,
+   "max": 1186.5
+  },
+  "typingP95Ms": {
+   "n": 3,
+   "min": 965,
+   "median": 965,
+   "mean": 965,
+   "p75": 965,
+   "p95": 965,
+   "max": 965
+  },
+  "domNodes": 135494,
+  "maxBlockedMs": 5062,
+  "unresponsiveRisk": true
+ },
+ "floor": {
+  "memory": {
+   "totalMB": 163.2,
+   "totalExGpuMB": 70.1,
+   "privateWorkingSetMB": 113.4,
+   "workingSetMB": 342.4,
+   "rendererMB": 24.1,
+   "rendererPrivateWSMB": 16.1,
+   "byKindMB": {
+    "renderer": 24.1,
+    "utility:NetworkService": 11.4,
+    "browser": 34.6,
+    "gpu": 93.1
+   },
+   "byKindPrivateWSMB": {
+    "renderer": 16.1,
+    "utility:NetworkService": 7.2,
+    "browser": 24.9,
+    "gpu": 65.3
+   },
+   "processCount": 4
+  },
+  "cpu": {
+   "totalPct": 0.35,
+   "byKindPct": {
+    "renderer": 0.35,
+    "utility:NetworkService": 0,
+    "browser": 0,
+    "gpu": 0
+   },
+   "wallSec": 8.9
+  }
+ },
+ "verdict": [
+  {
+   "id": "S1",
+   "name": "冷启动到可输入 P75",
+   "value": 1023,
+   "unit": "ms",
+   "abs": 2500,
+   "baseline": null,
+   "gate": 2500,
+   "rule": "绝对线",
+   "pass": true,
+   "informational": false
+  },
+  {
+   "id": "S1",
+   "name": "冷启动到可输入 P95",
+   "value": 1025,
+   "unit": "ms",
+   "abs": 5000,
+   "baseline": null,
+   "gate": 5000,
+   "rule": "绝对线",
+   "pass": true,
+   "informational": false
+  },
+  {
+   "id": "S2",
+   "name": "空闲内存 进程树 privateBytes",
+   "value": 504.8,
+   "unit": "MB",
+   "abs": 300,
+   "baseline": null,
+   "gate": 300,
+   "rule": "绝对线",
+   "pass": false,
+   "informational": false
+  },
+  {
+   "id": "S2",
+   "name": "空闲内存 渲染进程 privateBytes",
+   "value": 61.9,
+   "unit": "MB",
+   "abs": 150,
+   "baseline": null,
+   "gate": 150,
+   "rule": "绝对线",
+   "pass": true,
+   "informational": false
+  },
+  {
+   "id": "S5",
+   "name": "后台 CPU 合计（单核%）",
+   "value": 1.67,
+   "unit": "%",
+   "abs": 1,
+   "baseline": null,
+   "gate": 1,
+   "rule": "绝对线",
+   "pass": false,
+   "informational": false
+  },
+  {
+   "id": "S3",
+   "name": "长会话 打开到安静",
+   "value": 5202,
+   "unit": "ms",
+   "abs": 2000,
+   "baseline": null,
+   "gate": 2000,
+   "rule": "绝对线",
+   "pass": false,
+   "informational": false
+  },
+  {
+   "id": "S3",
+   "name": "长会话 渲染进程 privateBytes",
+   "value": 680.6,
+   "unit": "MB",
+   "abs": 500,
+   "baseline": null,
+   "gate": 500,
+   "rule": "绝对线",
+   "pass": false,
+   "informational": false
+  },
+  {
+   "id": "S3",
+   "name": "长会话 打字往返 P95",
+   "value": 965,
+   "unit": "ms",
+   "abs": 100,
+   "baseline": null,
+   "gate": 100,
+   "rule": "绝对线",
+   "pass": false,
+   "informational": false
+  },
+  {
+   "id": "S3",
+   "name": "长会话 无「无响应」（最长阻塞 ≤5 s）",
+   "value": 5062,
+   "unit": "ms",
+   "abs": 5000,
+   "baseline": null,
+   "gate": 5000,
+   "rule": "绝对线",
+   "pass": false
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "deepseek-ai/DeepSeek-V4-Flash-0731",
+   "object": "model",
+   "metadata": {
+    "context_length": 1000000,
+    "max_tokens": 64000,
+    "tags": [
+     "vision",
+     "reasoning_effort"
+    ]
+   }
+  },
+  {
+   "id": "BAAI/bge-m3",
+   "object": "model",
+   "metadata": {
+    "tags": [
+     "embeddings"
+    ]
+   }
+  }
+ ]
+}

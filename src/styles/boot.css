@@ -1,0 +1,399 @@
+/* 开屏 · 夜「蝶落枝头」/ 昼「花海」的版式。
+   场景（画布、动画、文字的出入）在 components/decor/boot/：所有视觉状态是时间 t 的纯函数，由 JS 逐帧写样式，
+   所以这里**没有 @keyframes**，只有静态版式：层叠、字号、渐变、暗纱的容器。
+   它是覆盖层，不是闸门：下面的应用一直可以输入（没有 inert）；.is-loading 时完全透明并放行指针。
+   离场不再是一次淡出，而是「转场」（boot/transition.ts）：.is-out 之后覆盖层 pointer-events:none，场景里的元素各自带着去处离开
+   （蝶、标题、署名；底图 / 拱窗里的立绘……），由 JS 按转场时刻写样式；只有减少动态 / 被迫定格（.is-out--soft）才是 CSS 的交叉淡化。
+   遮罩只写标准的 mask-image（Electron 45 的 Chromium 早已支持），不手写 -webkit- 前缀（Vite 的压缩器会和前缀版本打架）。 */
+
+.boot {
+  --out-ms: 180ms;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  overflow: hidden;
+  color: var(--text);
+  cursor: default;
+  user-select: none;
+  opacity: 1;
+  transition: opacity 180ms ease;          /* 素材就绪后淡入 */
+}
+/* 底板：开屏的底色与（夜）底图、暗纱都在它里面；转场里它整张溶掉，露出下面首页的壁纸层 */
+.boot__plate { position: absolute; inset: 0; z-index: 0; background: #0a0913; }
+.boot--day .boot__plate { background: #d4c8e4; }
+/* 素材还没就绪时：
+   · 窗口已经在屏幕上（外观设置里「预览」重播）：整层完全透明、不挡指针，就绪后整层淡入（root 的 opacity 过渡）；
+   · 窗口还没显示出来（启动，.is-fresh）：遮罩从第一次挂载起就**不透明**——一块与第 0 帧衔接的底色（夜：暗底；昼：薰衣草底，.boot__veil），
+     素材就绪、第 0 帧画好之后再在它上面淡入画面（.boot__stage 的 opacity 过渡；窗口还没露出来时没人看得见，直接不淡 .is-instant）。
+     不然窗口一露出来先是主界面，开屏随后才冒出来（原来 .is-loading 整层透明 + 窗口在 ready-to-show 就显示）；
+     不透明的遮罩挡着下面的界面，这段时间点击不能漏到下面的按钮（BootSplash 里吞掉）. */
+.boot.is-loading { opacity: 0; pointer-events: none; transition: none; }
+.boot.is-loading.is-fresh { opacity: 1; pointer-events: auto; }
+.boot__veil { position: absolute; inset: 0; z-index: 0; background: #0a0913; pointer-events: none; }      /* 夜第 0 帧几乎就是这块暗底（平均 #181530，大半是 #0a0913 的暗部） */
+.boot--day .boot__veil { background: #efeaf6; }      /* 昼第 0 帧的平均色（实测 #efeaf6） */
+.boot.is-fresh .boot__stage { transition: opacity 180ms ease; }
+.boot.is-fresh.is-loading .boot__stage { opacity: 0; transition: none; }
+.boot.is-fresh.is-instant .boot__stage { transition: none; }
+.boot.is-cap { transition: none; }          /* 逐帧导出（仅开发）：第 0 帧就是不透明的，不淡入 */
+.boot.is-out { pointer-events: none; }
+/* 减少动态 / 被迫定格（超宽窗口、机器画不动）：只做 ≤200 ms 的交叉淡化，没有任何位移 */
+.boot.is-out--soft { opacity: 0; transition: opacity var(--out-ms) ease; --out-ms: 180ms; }
+/* 导出模式（仅开发）：转场播完后覆盖层整个撤掉，露出首页 */
+.boot.is-cap-gone { display: none; }
+.boot__stage { position: absolute; inset: 0; }
+.boot canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.boot__bg { z-index: 0; }
+.boot__fx { z-index: 3; pointer-events: none; }
+/* 转场里才有的几层：飞向品牌标的蝶（legacy：一张整屏画布；comp：三张位图层的小组 + 光尘小画布）与品牌标那根细枝的分身（SVG），都在标题之上 */
+.boot__bfc { z-index: 6; pointer-events: none; }
+.boot__twig { position: absolute; z-index: 5; overflow: visible; pointer-events: none; contain: layout style; }    /* 枝的描画每个节拍都写属性：只在自己这一小块里重排 / 重算样式 */
+
+/* ───────── comp（合成器优先）的夜 ─────────
+   底板 = .boot__plate（溶解的 opacity）> .boot__hole（overflow:hidden 的「洞」持有者，转场里 translateX(X)）> .boot__plate-body（内层反向 translateX(−X)，净位移为 0；底色在它身上）。
+   洞的硬边由合成器的矩形裁切给出，不再每拍写 clip-path；底板是一块不透明的矩形（body 的底色 + 不透明的画布），Viz 能把它下面被盖住的整个界面直接剔掉. */
+.boot__stage.is-comp .boot__plate { background: transparent; }
+.boot__hole { position: absolute; inset: 0; overflow: hidden; }
+.boot__plate-body { position: absolute; inset: 0; background: #0a0913; }
+/* 预热（boot/warm.ts）：开屏播到一小半时，把转场里要动的层先升成合成层（它们都在不透明的底板下面，看不见），转场的第一帧就不必再等一次整屏光栅 */
+.boot__stage.is-warm .boot__shade-top, .boot__stage.is-warm .boot__shade, .boot__stage.is-warm .boot__shade-bot { will-change: opacity; }
+.boot__stage.is-warm .boot__grain { will-change: transform; }
+:root[data-boot="on"].boot-warm .side-nav { will-change: transform; }
+:root[data-boot="on"].boot-warm .return-col::before, :root[data-boot="on"].boot-warm .return-col > *, :root[data-boot="on"].boot-warm .app > .console { will-change: opacity, transform; }
+/* 转场里的玻璃瘦身（开屏 + 转场期间 html[data-boot="on"]，结束随属性撤掉）：
+   首页内容列（.return-col）里的每一块（输入框 .pbox__box / 提示条 .pbox__hint / 问候 .home-hero__greet / 首次使用的接入卡片 .panel.first-run……）在转场里都被
+   「带 opacity 动画 + will-change 的内容块」罩着——那个块是 backdrop root，里面的 backdrop-filter 只看得见块自己的内容，壁纸 / 纸面根本进不来，BF 在这里没有效果；
+   可它们在块半透明的那段时间里每帧都要各多开一个渲染通道（冻结在转场 0.75 s 的单帧基准里，这几块 BF 占应用侧单帧代价的约 1/3）。所以转场期间把它们的 BF 关掉，结束时随 data-boot 一起恢复。
+   画面：逐帧对拍（headless 逐帧导出，昼夜 × 完整 / 快速）只有这几块里文字 / 描边 / 图标的抗锯齿相位不同（昼：> 8 级的像素 0.56%、> 24 级 0.30%，全在输入框盒子里，最大 180 级；夜：> 8 级 0.02%、最大 16 级），形状 / 颜色 / 亮度没有差别。
+   注意不碰 .return-col::before（主栏玻璃，糊的是纸面 / 壁纸，是看得见的）、控制台条与左栏（它们自己带动画，BF 作用在真的背景上）. */
+:root[data-boot="on"] .return-col * { backdrop-filter: none; }
+/* 昼的主栏玻璃 .return-col::before：blur(12px) saturate(1.12) 糊的是奶油纸面（纯色 + 极淡的蝶纹，纹的不透明度 .55 × 上深下浅的遮罩），玻璃底色 .725 盖在上面——
+   糊前糊后只差纹路的锐度：逐帧对拍（headless 导出，昼完整版 0.5–1.2 s 各帧）主栏玻璃区上半（38 万像素）里 > 2 级的只有 36 个像素、最大 13 级，差 1 级的约 1%。可它是转场里单帧代价最大的一项
+   （冻结在转场 0.6–0.8 s 的单帧基准里占 1.2–1.9 ms，半透明淡入时 BF + 遮罩 + 圆角各多开一个渲染通道；实测去掉后昼 auto 的 p95 8.1 → 6.3 ms、Present 长停顿 −90%）。
+   所以昼的转场期间把它关掉，结束时随 data-boot 一起恢复（一帧里纹路由「糊的」变「锐的」，≤ 2 级、看不出来）。夜里它糊的是壁纸，是看得见的，不动. */
+:root[data-boot="on"][data-mode="day"] .return-col::before { backdrop-filter: none; }
+/* 预热玻璃（boot/warm.ts）：一小块几乎全透明、带同样的 backdrop-filter 与 opacity 组的东西，放在底板上面（不会被剔掉），让 Viz 先把这两种渲染通道跑一遍 */
+.boot__stage.is-peek { opacity: 0.998; will-change: opacity; }
+.boot .boot__warmglass { position: absolute; left: 0; top: 0; width: 6px; height: 6px; z-index: 90; pointer-events: none; opacity: 0.02; }
+.boot .boot__warmglass i { position: absolute; inset: 0; backdrop-filter: blur(var(--glass-blur, 14px)) saturate(1.1); background: rgb(0 0 0 / 0.004); }
+/* 转场开始（场景给 stage 加 is-tr）：把要动的层先升成合成层，第一个动画帧就不必再等一次整屏光栅.
+   暗纱 / 颗粒是整屏的静态层：必须单独升层，否则它们的渐变会和底下的东西一起被重新光栅（颗粒平铺一次就冒出近百块瓦片）. */
+.boot__stage.is-tr .boot__hole, .boot__stage.is-tr .boot__plate-body, .boot__stage.is-tr .boot__bg, .boot__stage.is-tr .boot__grain { will-change: transform; }
+.boot__stage.is-tr .boot__shade-top, .boot__stage.is-tr .boot__shade, .boot__stage.is-tr .boot__shade-bot, .boot__stage.is-tr .boot__fx { will-change: opacity; }
+.boot__stage.is-tr .boot__sub, .boot__stage.is-tr .boot__rule, .boot__stage.is-tr .boot__enter, .boot__stage.is-tr .boot__skip, .boot__stage.is-tr .boot__ver, .boot__stage.is-tr .boot__credit, .boot__stage.is-tr .boot__title h1.sweep { will-change: opacity, transform; }
+/* 标题组预烘焙叠层（转场里，标题已完全浮现时；nightComp.ts 的 nightTitleChannels）：
+   「栖枝」= 光晕层（透明字 + text-shadow，≈ 原来 filter 里的三层 drop-shadow）/ 渐变字层 / 纯字标色字层，叠放；整体位姿、淡出、逐字平移、两层的 opacity 全在合成器上.
+   ALIGHT = 逐字母绝对定位（位置取自原整串排版的量值）的同样三层. */
+.boot__tt { position: absolute; transform-origin: 0 0; pointer-events: none; will-change: transform, opacity; }
+.boot__title .boot__tt-l { position: absolute; left: 0; top: 0; margin: 0; filter: none; will-change: opacity; }
+.boot__title .boot__tt-l .c { opacity: 1; will-change: transform; }
+/* 光晕层：透明字 + text-shadow。原 h1 的 filter 是三层 drop-shadow 的串联——第三层的紫色外发光（34 px、α .4）是对「字 + 前两层暗影」整块的影子，比并列的 text-shadow（只对字形）宽也强；
+   并列写法照搬三层参数会让标题周围偏暗（评审：换成叠层那一帧标题框 −1.3 级、光晕区 −3 级；去掉暗影也只回升 0.1，所以是紫光不够，不是暗影太强）。
+   第三层改成 50 px / α .62 去逼近串联的效果（逐帧对拍：光晕区偏差 −1.0 → +0.1，整框 −1.3 → −0.3；ALIGHT 那一行的 text-shadow 本来就是单层，不动） */
+.boot__title .boot__tt-halo .c { background: none; color: transparent; -webkit-text-fill-color: transparent; text-shadow: 0 2px 2px rgb(8 6 22 / 0.85), 0 0 24px rgb(8 6 22 / 0.8), 0 0 50px rgb(134 92 152 / 0.62); }
+.boot__title .boot__tt-flat { opacity: 0; }
+.boot__title .boot__tt-flat .c { background: none; color: var(--tt-c); -webkit-text-fill-color: var(--tt-c); }
+.boot__title .boot__tt-e { position: absolute; left: 0; top: 0; margin: 0; width: 100%; height: 100%; opacity: 1; letter-spacing: 0; text-shadow: none; will-change: opacity; }
+.boot__title .boot__tt-e .l { position: absolute; top: 0; display: block; will-change: transform; }
+.boot__title .boot__tt-e--halo { color: transparent; text-shadow: 0 0 12px rgb(8 6 22 / 0.7); }
+.boot__title .boot__tt-e--flat { opacity: 0; color: var(--tt-c); }
+/* 蝶：三张位图层放进 isolation:isolate 的小组（柔光 / 翅面高光与本体 plus-lighter 叠加，只在组内，与原画布的 lighter 一致）；
+   组的位姿（translate · rotate · scale）由合成器按折线关键帧驱动，原点在蝶的方框中心 */
+.boot__bf { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 6; pointer-events: none; isolation: isolate; transform-origin: 0 0; will-change: transform; }
+.boot .boot__bf canvas { transform-origin: 50% 50%; will-change: opacity; }
+.boot .boot__bf-body { left: -50px; top: -40px; width: 100px; height: 80px; }
+.boot .boot__bf-over { left: -50px; top: -40px; width: 100px; height: 80px; transform: scale(1.04); mix-blend-mode: plus-lighter; }
+.boot .boot__bf-glow { left: -66.667px; top: -56.667px; width: 133.333px; height: 113.333px; mix-blend-mode: plus-lighter; }
+.boot .boot__dust { inset: auto; z-index: 6; pointer-events: none; }
+/* 品牌标「亮一次」：真标的一份克隆叠在原处，带一个静态的 12 px 外发光，只动 opacity（原来动画 filter: drop-shadow，合成器画不了） */
+.boot .boot__halo { position: absolute; z-index: 7; pointer-events: none; overflow: visible; }
+
+/* ───────── 夜 ───────── */
+
+/* 暗纱的渐变由场景写进内联样式（smoothstep 色标，羽化干净）；这里只给位置与层。 */
+.boot__shade-top { position: absolute; left: 0; right: 0; top: 0; height: 34vh; z-index: 2; pointer-events: none; }
+.boot__shade { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none; }
+.boot__shade-bot { position: absolute; left: 0; right: 0; bottom: 0; height: 22vh; z-index: 2; opacity: 0; pointer-events: none; }
+/* 细颗粒盖在暗纱上：把暗部渐变在 8 位里的等高线打散成噪点（背景图片由场景生成） */
+.boot__grain { position: absolute; inset: 0; z-index: 2; pointer-events: none; background-repeat: repeat; background-size: 192px 192px; }
+
+.boot__title { position: absolute; left: 7.4vw; top: 31vh; width: 44vw; z-index: 4; }
+.boot__title h1 {
+  margin: 0 0 0 -0.06em;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: min(132px, 13.2vh);
+  line-height: 1.04;
+  letter-spacing: 0.24em;
+  white-space: nowrap;
+  filter: drop-shadow(0 2px 2px rgb(8 6 22 / 0.85)) drop-shadow(0 0 24px rgb(8 6 22 / 0.8)) drop-shadow(0 0 34px rgb(134 92 152 / 0.4));
+}
+.boot__title h1 .c {
+  display: inline-block;
+  opacity: 0;
+  background: linear-gradient(180deg, #faf8fc 0%, #e4dfe6 28%, #b99ec3 66%, #9a74ad 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* 一次性高光：与 h1 同字形的叠层，用 background-clip:text 把一条窄光带只画在字面上 */
+.boot__title h1.sweep {
+  position: absolute;
+  left: 0;
+  top: 0;
+  filter: none;
+  pointer-events: none;
+  opacity: 0;
+  mix-blend-mode: plus-lighter;
+  background: linear-gradient(100deg, rgb(214 236 255 / 0) 0 38%, rgb(214 236 255 / 1) 50%, rgb(214 236 255 / 0) 62% 100%) 75% 0 / 300% 100% no-repeat;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.boot__en {
+  margin: 0.8vh 0 0 0.25vw;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: min(31px, 3.1vh);
+  line-height: 1.22;
+  letter-spacing: 0.42em;
+  color: #e8e3f8;
+  text-shadow: 0 0 12px rgb(8 6 22 / 0.7);
+  opacity: 0;
+  white-space: nowrap;
+}
+.boot__rule { display: flex; align-items: center; gap: 12px; width: min(380px, 24vw); margin: 2.4vh 0 1.8vh 0.25vw; color: #dccbe6; }
+.boot__rule i { flex: 1; height: 1px; background: linear-gradient(90deg, rgb(236 223 241 / 0.04), rgb(236 223 241 / 0.85)); transform-origin: 100% 50%; transform: scaleX(0); }
+.boot__rule i:last-child { background: linear-gradient(90deg, rgb(236 223 241 / 0.85), rgb(236 223 241 / 0.04)); transform-origin: 0 50%; }
+.boot__rule .seed path { opacity: 0; }
+.boot__sub {
+  margin: 0 0 0 0.25vw;
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: min(23px, 2.3vh);
+  line-height: 1.4;
+  letter-spacing: 0.26em;
+  color: var(--text);
+  text-shadow: 0 0 10px rgb(8 6 22 / 0.8);
+  opacity: 0;
+  white-space: nowrap;
+}
+.boot__enter {
+  position: absolute;
+  left: 7.75vw;
+  bottom: 7vh;
+  z-index: 4;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 16px;
+  letter-spacing: 0.42em;
+  color: #f1edf8;
+  text-shadow: 0 0 10px rgb(8 6 22 / 0.8);
+}
+.boot__enter .seed { filter: drop-shadow(0 0 8px rgb(124 200 247 / 0)); overflow: visible; }
+.boot__enter .seed path { opacity: 0.12; }
+.boot__enter .seed .b { opacity: 0.3; }
+.boot__enter > span { opacity: 0; }
+/* 蝶落枝头之前：左下角常驻「Esc 或任意键跳过」（60% 透明度）；火种点亮时让位给「按任意键进入」 */
+.boot__skip {
+  position: absolute;
+  left: 7.75vw;
+  bottom: 7vh;
+  z-index: 4;
+  margin: 0;
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: 0.3em;
+  color: #f1edf8;
+  text-shadow: 0 0 10px rgb(8 6 22 / 0.8);
+  opacity: 0;
+}
+.boot__ver {
+  position: absolute;
+  left: 7.75vw;
+  top: 4.4vh;
+  margin: 0;
+  z-index: 4;
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.4em;
+  color: rgb(232 227 248 / 0.78);
+  opacity: 0;
+}
+.boot__credit {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  margin: 0;
+  z-index: 4;
+  font-size: 11.5px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  color: rgb(240 236 248 / 0.94);
+  text-shadow: 0 0 6px rgb(8 6 20 / 0.9);
+  opacity: 0;
+}
+.boot .seed { color: inherit; }
+
+/* ───────── 昼：舞台 1600×1000（样稿 day s0 的样式；选择器都收在 .boot--day 下） ───────── */
+.boot--day {
+  --text: #2e2142;
+  --tri: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><path d='M5.2 5.4h5.6L8 10.2z' fill='white' fill-opacity='.42'/></svg>");
+  --ban44: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='44' viewBox='0 0 76 44'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23563673'/><stop offset='1' stop-color='%236b4690'/></linearGradient></defs><polygon points='0,0 53,0 76,22 53,44 0,44' fill='url(%23g)'/><polygon points='3.5,3.5 52,3.5 71,22 52,40.5 3.5,40.5' fill='none' stroke='white' stroke-opacity='.8' stroke-width='1.1' stroke-linejoin='round'/></svg>");
+}
+.boot--day { color: #2e2142; }
+.boot--day .bd-stage, .boot--day .bd-text, .boot--day .bd-bfwrap { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; transform-origin: 0 0; }
+.boot--day .bd-text, .boot--day .bd-bfwrap { pointer-events: none; }
+.boot--day .bd-stage { z-index: 1; }
+.boot--day .boot__fx { z-index: 2; }
+.boot--day .bd-bfwrap { z-index: 3; overflow: visible; }
+.boot--day .bd-text { z-index: 4; }
+.boot--day .bd-bfzoom { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; overflow: visible; }
+.boot--day .bd-bfsvg { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; overflow: visible; }
+.boot--day .bd-world { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; will-change: transform; }
+/* 开屏里 JS 每拍写 transform / opacity 的层升成合成层：位置 / 缩放由合成器画，不再整层重新栅格（实测开屏的瓦片光栅 2.6 s → 1.2 s / 7 s） */
+.boot--day .bd-near1, .boot--day .bd-near2, .boot--day .bd-bfzoom { will-change: transform; }
+.boot--day .bd-snow > i { will-change: transform, opacity; }
+.boot--day .bd-bloom, .boot--day .bd-near1, .boot--day .bd-near2 { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; }
+.boot--day .bd-bloom, .boot--day .bd-near1 { mask-repeat: no-repeat; }
+/* 底板持有者（dayScene.ts 的开屏底板：薰衣草底 + 渐变底图 + 柔光）：开屏里只是个不动的 overflow:hidden 容器；转场（comp）里被拆成三份、各自平移 */
+.boot--day .boot__ph { position: absolute; left: 0; top: 0; right: -8px; bottom: 0; overflow: hidden; z-index: 0; }
+.boot--day .boot__ps { position: absolute; inset: 0; }
+/* 视频版（boot/bootVideo.ts、videoRun.ts；docs/BOOT-VIDEO.md §1.3）：<video> 放在舞台最底层（DOM 里排在场景所有层之前），外层 .boot__vbox 负责裁切（窗口比视频窄时右侧被裁）。
+   视频期间环境层（底板 / 光束 / 花海条）visibility:hidden（不栅格、不写样式；枝是实时的）；7.15 s 起场景摘掉 .is-vid、环境层 opacity .001 叠在视频之上预栅格，7.4 s 淡入后撤视频. */
+.boot__vbox { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.boot__vid { position: absolute; left: 0; top: 0; display: block; max-width: none; object-fit: fill; background: #d4c8e4; pointer-events: none; user-select: none; }
+/* 视频期间被视频顶着的环境层隐藏（不栅格、不再每拍写样式）；官方立绘 / 近景散花（.bd-bloom 里的 .s0-art / .bd-near2）、蝶、雪点、光尘、文字是实时的：立绘层 2.3 s 起（.is-ov）提前栅格，2.7–3.0 s 淡入到视频之上. */
+.boot__stage.is-vid .boot__ph, .boot__stage.is-vid .bd-beams, .boot__stage.is-vid .bd-pre, .boot__stage.is-vid .bd-bloom .bd-near1 { visibility: hidden; }
+/* 枝（.s0-twc 画布 + .s0-twig 的白花 / 落蝶光晕）不在视频母版里，视频期间由实时层从 1.2 s 起画（dayScene.ts 的 renderTwig），所以不在上面的隐藏名单里. */
+.boot__stage.is-vid:not(.is-ov) .bd-bloom { visibility: hidden; }
+.boot--day .bd-stack { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; transform-origin: 0 0; pointer-events: none; }
+.boot--day .bd-bg { position: absolute; left: 0; top: 0; height: 1000px; overflow: hidden;
+  background: radial-gradient(760px 640px at 992px 540px, #fffdf9 0%, rgba(255,253,249,.88) 34%, rgba(255,253,249,0) 74%), linear-gradient(118deg, #ddd3ee 0%, #ece6f6 34%, #f6f2fa 58%, #eef2fb 100%); }
+.boot--day .bd-bg .bk { position: absolute; display: block; left: 640px; top: 140px; width: 1100px; filter: blur(60px) saturate(1.1); opacity: 0; }
+.boot--day .bd-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(118deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.22) 55%, rgba(255,255,255,.34) 100%); pointer-events: none; }
+.boot--day .bd-bg .tri { position: absolute; inset: 0; background-image: var(--tri); opacity: .5; mask-image: linear-gradient(100deg, #000 0%, rgba(0,0,0,.2) 55%, transparent 100%); }
+.boot--day .bd-bg .edge { position: absolute; left: 0; right: 0; top: 0; height: 9px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='9'><path d='M12 1.6l2.2 2.9L12 7.4 9.8 4.5z' fill='white' fill-opacity='.75'/></svg>") repeat-x center/24px 9px; }
+.boot--day .bd-bg .edge::after { content: ""; position: absolute; left: 0; right: 0; top: 9px; height: 1px; background: rgba(255,255,255,.45); }
+.boot--day .beam { position: absolute; left: 0; top: 0; width: 200px; height: 1900px; pointer-events: none; display: none; transform: rotate(31.5deg); transform-origin: 50% 50%; }
+.boot--day .s0-glow { position: absolute; left: 0; top: 0; width: 100%; height: 100%; background: radial-gradient(520px 420px at 22% 54%, rgba(255,255,255,.7), rgba(255,255,255,0) 72%); pointer-events: none; }
+.boot--day .pstrip { position: absolute; background-repeat: no-repeat; pointer-events: none; filter: brightness(1.2) saturate(.8); }
+.boot--day .s0-pf { left: 0; bottom: 0; width: 1600px; height: 210px; background-size: 1700px auto; background-position: -40px 0; opacity: .85; mask-image: linear-gradient(0deg, #000 0, rgba(0,0,0,.85) 42%, transparent 100%); }
+.boot--day .s0-art { position: absolute; left: 470px; top: -62px; width: 1280px; height: 1280px; display: block; pointer-events: none;
+  mask-image: linear-gradient(90deg, transparent 0, transparent 6%, rgba(0,0,0,.55) 15%, #000 25%, #000 57%, rgba(0,0,0,.5) 65%, rgba(0,0,0,.16) 73%, transparent 83%), linear-gradient(180deg, transparent 0, #000 13%, #000 100%);
+  mask-composite: intersect; }
+.boot--day .boot__fig { position: absolute; max-width: none; height: auto; display: block; pointer-events: none; user-select: none; }   /* 转场里叠在原画上的人物抠图（transition.ts 的 FIG_STAGE） */
+.boot--day .boot__archbg { position: absolute; pointer-events: none; }   /* 收窗时窗里临时的薰衣草底（dayScene 写渐变；透明度 = 换景进度） */
+/* 光环：跟着立绘走（transform = decoXf），按终态位置摆好；--ku = 1 屏幕像素换成舞台单位 */
+.boot--day .boot__archdeco { position: absolute; pointer-events: none; }
+.boot--day .boot__archdeco i { position: absolute; border-radius: 50%; background: radial-gradient(closest-side, rgb(255 255 255 / 0.95) 0, rgb(255 255 255 / 0.72) 62%, rgb(205 193 233 / 0) 100%); box-shadow: 0 0 0 calc(1.5px * var(--ku)) rgb(154 133 200 / 0.32), 0 0 0 calc(9px * var(--ku)) rgb(255 255 255 / 0.3); }
+/* 脚下的白花海：框跟着窗的左缘与底边走，纹理钉在终态的位置（dayScene 每帧写框与 background-position；终态与 decor.css 的 .daystage__flowers 同图同尺寸同位置） */
+.boot--day .boot__archflw { position: absolute; pointer-events: none; background-repeat: repeat-x; mask-image: linear-gradient(0deg, #000 0, rgb(0 0 0 / 0.8) 40%, transparent 100%); }
+/* 窗的落影（0 14 34 rgb(70 45 110 / .2)，同 decor.css 的 .daystage__arch）：整片模糊每个节拍重画很贵，改在画布上画（dayScene.ts 的 drawShadow）；这里只给它版式（位置 / 大小由场景写） */
+.boot--day .boot__archshadow { position: absolute; pointer-events: none; display: block; }
+/* 窗的轮廓（同 decor.css 的 .daystage）：外一圈白框、底部点状窗台、1 px 浅紫描边（落影在上面那张画布里）；位置 / 圆角由 dayScene 每帧写成裁切框 */
+.boot--day .boot__archframe { position: absolute; pointer-events: none;
+  /* 左缘高速移动时左侧轮廓让位给纸面的软边（dayScene 写 mask-image：左边起 α ≤ .2、向右渐强）；遮罩比框大 200 单位一圈（no-clip：别把外圈的阴影一并裁掉），不重复 */
+  mask-size: calc(100% + 400px) calc(100% + 400px); mask-position: -200px -200px; mask-repeat: no-repeat; mask-clip: no-clip; }
+.boot--day .boot__archframe .ring { position: absolute; inset: calc(-6px * var(--ku)); border: calc(1.5px * var(--ku)) solid rgb(255 255 255 / 0.7); }
+.boot--day .boot__archframe .in { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.boot--day .boot__archframe .hem { position: absolute; left: 0; right: 0; bottom: 0; height: calc(9px * var(--ku)); background: var(--hem-img) repeat-x 0 0 / calc(30px * var(--ku)) calc(9px * var(--ku)); }
+.boot--day .boot__archframe::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 calc(1px * var(--ku)) rgb(120 100 170 / 0.42); }
+.boot--day .s0-fl { position: absolute; left: 0; bottom: 0; width: 1600px; height: 190px; pointer-events: none; overflow: visible; }
+.boot--day .s0-twc { position: absolute; pointer-events: none; }
+.boot--day .s0-twig { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; pointer-events: none; overflow: visible; }
+.boot--day .bd-snow { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; pointer-events: none; overflow: visible; }
+.boot--day .bd-snow i { position: absolute; border-radius: 50%; background: #fff; box-shadow: 0 0 0 1px rgba(150,130,205,.5), 0 1px 6px rgba(150,130,200,.38); opacity: 0; }
+.boot--day .s0-left { position: absolute; left: 116px; top: 292px; width: 520px; }
+.boot--day .s0-left h1 { margin: 0; font-family: var(--font-serif); font-weight: 700; font-size: 124px; line-height: 140px; letter-spacing: .12em; margin-left: -6px; color: #3a2357; text-shadow: 0 2px 0 rgba(255,255,255,.9), 0 10px 30px rgba(120,86,168,.28); }
+.boot--day .s0-left h1 .c { display: inline-block; opacity: 0; }
+.boot--day .s0-left .en { display: flex; align-items: center; gap: 20px; margin: 4px 0 30px 2px; font-family: var(--font-display); font-weight: 500; font-size: 30px; line-height: 36px; letter-spacing: .78em; color: #5a3a7e; }
+.boot--day .s0-left .en i { height: 1px; width: 56px; background: linear-gradient(90deg, rgba(90,58,126,0), rgba(90,58,126,.7)); transform-origin: 100% 50%; transform: scaleX(0); }
+.boot--day .s0-left .en i:last-child { background: linear-gradient(90deg, rgba(90,58,126,.7), rgba(90,58,126,0)); width: 92px; transform-origin: 0 50%; }
+.boot--day .s0-left .en span { opacity: 0; }
+.boot--day .ban { display: inline-flex; align-items: center; gap: 10px; height: 44px; border-style: solid; border-width: 0 30px 0 16px; padding: 0 6px 0 4px; color: #f6f3fa; border-image: var(--ban44) 0 30 0 16 fill/0 30px 0 16px stretch; font-family: var(--font-serif); white-space: nowrap; }
+.boot--day .ban .st4 { width: 15px; height: 15px; color: #fff; flex: none; fill: currentColor; stroke: none; }
+.boot--day .ban b { font-weight: 700; letter-spacing: .04em; }
+.boot--day .s0-left .ban { height: 46px; font-size: 18px; letter-spacing: .22em; filter: drop-shadow(0 6px 10px rgba(70,45,110,.3)); clip-path: inset(0 100% 0 0); margin: 0; }
+.boot--day .s0-left .ban b { letter-spacing: .2em; font-weight: 600; }
+.boot--day .s0-epi { display: flex; align-items: center; gap: 14px; margin-top: 38px; font-family: var(--font-serif); font-size: 15px; letter-spacing: .34em; color: #4f2f78; }
+.boot--day .s0-epi i { display: block; height: 1px; width: 34px; background: linear-gradient(90deg, rgba(90,58,126,0), rgba(90,58,126,.55)); transform-origin: 100% 50%; transform: scaleX(0); }
+.boot--day .s0-epi i:last-child { background: linear-gradient(90deg, rgba(90,58,126,.55), rgba(90,58,126,0)); width: 60px; transform-origin: 0 50%; }
+.boot--day .s0-epi span { opacity: 0; }
+.boot--day .s0-enter { position: relative; margin-top: 38px; width: fit-content; display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 22px 0 16px; border-radius: 19px; background: rgba(255,254,251,.92); box-shadow: 0 6px 18px rgba(70,45,110,.18), inset 0 0 0 1px rgba(205,193,233,.7); font-family: var(--font-serif); font-weight: 600; font-size: 15px; letter-spacing: .32em; color: #3a2357; opacity: 0; }
+.boot--day .s0-enter .flame { width: 22px; height: 22px; color: #6a4590; }
+.boot--day .s0-enter .ln { position: absolute; left: 24px; right: 24px; bottom: -10px; height: 2px; border-radius: 1px; background: linear-gradient(90deg, rgba(124,200,247,0), #7cc8f7, rgba(124,200,247,0)); filter: drop-shadow(0 0 4px rgba(124,200,247,.9)); transform: scaleX(0); opacity: 0; }
+.boot--day .s0-credit { margin: 0; position: absolute; left: 116px; bottom: 34px; font-size: 12px; line-height: 18px; color: #4a3d63; padding: 2px 12px; border-radius: 10px; background: rgba(255,254,251,.78); opacity: 0; white-space: nowrap; }
+.boot--day .s0-skip { margin: 0; position: absolute; left: 116px; bottom: 84px; font-size: 12px; line-height: 18px; letter-spacing: .3em; color: #4a3d63; padding: 2px 12px; border-radius: 10px; background: rgba(255,254,251,.6); opacity: 0; white-space: nowrap; }
+.boot--day .s0-ver { margin: 0; position: absolute; right: 22px; top: 16px; font-family: var(--font-display); font-weight: 500; font-size: 11px; letter-spacing: .4em; color: #5a3a7e; opacity: 0; }
+
+/* ───────── 昼 · 开屏的快路径（0.1.4；dayScene.ts 的 prepare / renderBloom / setupFast）─────────
+   绽开画布 canvas.bd-bloomcv 在 .bd-bloom 里盖住三个子层（子层在画布模式下 visibility:hidden，由 JS 写）；花海条 / 散花 / 光晕烘成位图后各由一张画布取代原来的 DOM（原 DOM 留着做回退，.is-baked 把它藏起来）。
+   位置 / 大小都由场景写成行内样式（舞台单位）；这里只给版式. */
+.boot--day .bd-bloomcv { position: absolute; left: 0; top: 0; display: block; pointer-events: none; }
+.boot--day .pstrip.is-baked, .boot--day .s0-fl.is-baked { display: none; }
+.boot--day .bd-stripcv { position: absolute; left: 0; top: auto; right: auto; bottom: 0; height: 210px; display: block; pointer-events: none; }   /* 盖掉 .boot canvas { inset: 0; 100% × 100% } */
+.boot--day .bd-flcv { position: absolute; display: block; pointer-events: none; }
+.boot--day .bd-bg .bkb { position: absolute; display: block; pointer-events: none; opacity: 0; }
+/* 文字段（5.2–7.0 s）：4.9 s 起被动画的文字元素各自成层（.is-wc，JS 逐个元素加），letter-spacing / clip-path / drop-shadow / 描边的重光栅只落在自己的小层上；
+   每个元素自己的动画收完就撤（dayScene.ts 的 WC_END）：静止后还挂着层，小字被重采样得发虚，到 7.4 s 一起撤时会「对一下焦」 */
+.boot--day .bd-text .s0-left h1 .c.is-wc, .boot--day .bd-text .s0-left .en span.is-wc { will-change: opacity, transform, filter; }
+.boot--day .bd-text .s0-left .en i.is-wc, .boot--day .bd-text .s0-epi i.is-wc, .boot--day .bd-text .s0-epi span.is-wc, .boot--day .bd-text .s0-enter.is-wc, .boot--day .bd-text .s0-enter .ln.is-wc { will-change: opacity, transform; }
+.boot--day .bd-text .s0-left .ban.is-wc { will-change: transform; }
+.boot--day .bd-text .s0-ver.is-wc, .boot--day .bd-text .s0-skip.is-wc { will-change: opacity; }
+
+/* ───────── 昼 · 转场的合成器路径（comp；dayTrComp.ts / dayComp.ts）─────────
+   底板 = 三份拷贝（主体 .boot__ph / 斜坡 .boot__ph--ramp / 左边一条 .boot__ph--strip）：持有者 overflow:hidden + 平移，内层 .boot__ps 反向平移钉在屏幕上；
+   窗的轮廓 = 分件（.dfp：细条 / 圆角小件 / 窗台），窗左缘的薄纱 = 底板的一份拷贝 + 静态渐变遮罩（.boot__sveil），蝶 = 四个小层（.boot__dbf）。 */
+.boot__stage.is-trc .boot__ph, .boot__stage.is-trc .boot__ps { will-change: transform; }
+.boot--day .boot__ph--ramp { mask-image: linear-gradient(90deg, transparent 0, #000 100%); }
+/* 底板各层（legacy：底色层 / 底图层 / 柔光层各按 1 − bg 淡出、各带同一条补集遮罩）：底色层 = .boot__fill / .boot__rfill（斜坡里是 0 → 1 的渐变纯色），底图 = 位图画布；
+   壁纸色擦除层 .boot__wall（在底板下面、应用上面）把前缘右边与羽化带里的纸面擦掉（legacy 里那里纸面被遮罩）；薄纱里的 .boot__vw 是同一个壁纸色. */
+.boot--day .boot__fill { position: absolute; inset: 0; background: #d4c8e4; will-change: opacity; }
+.boot--day .boot__rfill { position: absolute; left: 0; top: 0; height: 100%; pointer-events: none; will-change: transform, opacity; }
+.boot--day .boot__wallh { position: absolute; top: 0; height: 100%; overflow: hidden; pointer-events: none; }
+.boot--day .boot__wall { position: absolute; top: 0; height: 100%; will-change: transform; }
+.boot--day .boot__vw { position: absolute; inset: 0; }
+.boot--day .boot__sveil { position: absolute; overflow: hidden; pointer-events: none; will-change: transform, opacity; transform-origin: 0 0; mask-image: linear-gradient(90deg, #000 0, transparent 100%); }
+.boot--day .boot__sveil-in { position: absolute; transform-origin: 0 0; will-change: transform; }
+/* 底板烘焙成的位图（plateBake.ts）：主体 / 斜坡 / 左边一条是屏幕大小，薄纱里的是舞台单位大小（行内样式给） */
+.boot--day canvas.boot__bake { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; will-change: opacity; }
+.boot--day .boot__dfr { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
+.boot--day .dfp { position: absolute; left: 0; top: 0; transform-origin: 0 0; opacity: 0; pointer-events: none; will-change: transform, opacity; }
+.boot--day .dfp-c, .boot--day .dfp-cb { will-change: transform, opacity, clip-path; }
+.boot--day .dfp-hemh { overflow: hidden; }
+.boot--day .dfp.dfp-hemh { opacity: 1; }          /* 持有者本身不透明，淡入淡出在内层条上（dfp 的缺省 opacity:0 会把整条窗台吃掉） */
+.boot--day .dfp-hemi { position: absolute; left: 0; top: 0; background: var(--hem-img) repeat-x 0 0 / calc(30px * var(--ku)) calc(9px * var(--ku)); }
+.boot--day .boot__dshadow { position: absolute; pointer-events: none; will-change: opacity; }
+.boot--day .boot__dshadow-l { position: absolute; top: 0; pointer-events: none; transform-origin: 0 0; will-change: transform, opacity;
+  background: linear-gradient(90deg, rgb(70 45 110 / 0) 0%, rgb(70 45 110 / 0.0003) 14.3%, rgb(70 45 110 / 0.0012) 28.6%, rgb(70 45 110 / 0.0046) 42.9%, rgb(70 45 110 / 0.0134) 57.2%, rgb(70 45 110 / 0.0317) 71.5%, rgb(70 45 110 / 0.0617) 85.8%, rgb(70 45 110 / 0.1) 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 7%, #000 91%, transparent 100%); }
+.boot--day .boot__archflw.is-comp { will-change: transform, opacity; }
+/* 昼的标题组预烘焙叠层（dayTrComp.ts / dayComp.ts 的 dayTitleChannels）：「栖枝」= 光晕层（透明字 + 原来的 text-shadow）/ 起始字色层 / 字标色层；ALIGHT = 逐字母绝对定位的两层 */
+.boot--day .boot__dtt { position: absolute; transform-origin: 0 0; pointer-events: none; will-change: transform, opacity; }
+.boot--day .s0-left .boot__dtt-l { position: absolute; left: 0; top: 0; margin: 0; width: 100%; will-change: opacity; }
+.boot--day .s0-left .boot__dtt-l .c { will-change: transform; }
+.boot--day .s0-left .boot__dtt-halo { color: transparent; -webkit-text-fill-color: transparent; }
+.boot--day .s0-left .boot__dtt-a { text-shadow: none; }
+.boot--day .s0-left .boot__dtt-flat { text-shadow: none; color: var(--tt-c); opacity: 0; }
+.boot--day .boot__dtt-e { position: absolute; left: 0; top: 0; width: 100%; height: 100%; font-family: var(--font-display); font-weight: 500; font-size: 30px; line-height: 36px; white-space: nowrap; color: #5a3a7e; will-change: opacity; }
+.boot--day .boot__dtt-e .l { position: absolute; top: 0; display: block; will-change: transform; }
+.boot--day .boot__dtt-e--flat { color: var(--tt-c); opacity: 0; }
+/* 昼的预热探针（boot/warm.ts 的 warmDayProbes）：右下角三小块，整体 2% 不透明度 */
+.boot .boot__warmday { position: absolute; right: 8px; bottom: 8px; width: 160px; height: 56px; z-index: 90; pointer-events: none; opacity: 0.02; }
+.boot .boot__warmday > div { position: absolute; top: 0; width: 48px; height: 48px; }
+.boot .wd-clip { left: 0; background: #fff; will-change: clip-path; }
+.boot .wd-mask { position: absolute; inset: 0; background: #d4c8e4; will-change: transform; mask-image: linear-gradient(90deg, #000, transparent); }
+.boot .wd-hold { left: 52px; overflow: hidden; mask-image: linear-gradient(90deg, transparent 0, #000 100%); will-change: transform, opacity; }
+.boot .wd-in { position: absolute; left: 0; top: 0; width: 100px; height: 48px; background: linear-gradient(90deg, #e4dcf4, #fff); will-change: transform; }
+.boot .wd-grp { left: 104px; will-change: opacity; }
+.boot .wd-blur { position: absolute; left: 8px; top: 8px; width: 32px; height: 32px; background: #b49ad6; filter: blur(8px) saturate(1.1); }
+.boot--day .boot__dbf { position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 3; pointer-events: none; transform-origin: 0 0; will-change: transform, opacity; }
+.boot--day .boot__dbf > div { position: absolute; will-change: transform, opacity; }
+.boot--day .boot__dbf svg { display: block; overflow: visible; }
+
+@media (max-width: 760px) {
+  .boot__title { left: 6vw; width: 88vw; }
+  .boot__rule { width: 60vw; }
+}

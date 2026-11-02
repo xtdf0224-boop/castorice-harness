@@ -1,0 +1,783 @@
+/* 任务工作区 — header, goal, state callout, plan, conversation / steps / artifacts.
+   Layout is driven by container queries on .workspace (named "ws"): ≥ 980px the plan sits beside
+   the tabs as a vertical rail; below that it becomes a horizontal stepper above them.
+   Motion is limited to transform / opacity / box-shadow and every loop has a static reduced-motion
+   twin at the bottom of this file. */
+
+/* ───────────── root & layout ───────────── */
+.workspace {
+  --ws-body-min: 480px;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-shell);
+  /* Let glows and focus rings breathe: the scroll box reaches into the shell gap. */
+  margin: calc(-1 * var(--gap-shell));
+  padding: var(--gap-shell);
+  overflow-x: hidden;
+  overflow-y: auto;
+  container: ws / inline-size;
+}
+.workspace > * { flex: none; }
+
+.ws-body {
+  flex: 1 1 0;
+  min-height: var(--ws-body-min);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--gap-shell);
+}
+@container ws (min-width: 980px) {
+  .ws-body { grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }}
+/* Stacked layout: the plan stepper, tab bar and composer take a good part of the body, so it needs
+   a taller floor. (Set on .ws-body itself: a container query can only style descendants of the
+   container, so a rule on .workspace would never match.) */
+@container ws (max-width: 979px) {
+  .ws-body { --ws-body-min: 620px; }}
+
+/* ───────────── header ───────────── */
+.ws-header__bar { flex-wrap: wrap; }
+.ws-header__tools { gap: var(--sp-2); }
+.ws-drawer-btn { position: relative; display: inline-flex; }
+.ws-drawer-btn__badge { position: absolute; top: -5px; right: -5px; pointer-events: none; }
+
+/* A bright segment travels along the energy line while a run is live. */
+.ws-sweep {
+  display: none;
+  position: absolute;
+  left: var(--sp-4);
+  right: var(--sp-4);
+  bottom: 0;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
+.ws-sweep i {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 24%;
+  background: linear-gradient(90deg, transparent, var(--blue), var(--accent-strong), transparent);
+  opacity: 0.6;
+  animation: ws-sweep 14s linear infinite;   /* 河光：周期 12–20 s，只在有真实运行时 */
+}
+.ws-header[data-live="true"] .ws-sweep { display: block; }
+@keyframes ws-sweep { from { transform: translateX(-100%); } to { transform: translateX(420%); } }
+
+.ws-header__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4) 0;
+}
+.ws-title {
+  min-width: 0;
+  font-family: var(--font-serif);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.02em;
+  font-size: 24px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
+.ws-status { display: inline-flex; align-items: center; }
+.ws-attempt { font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
+
+.ws-header__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3) var(--sp-5);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+.ws-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.ws-controls__hint { font-size: var(--fs-xs); color: var(--text-3); }
+
+.ws-meta { display: flex; align-items: center; gap: var(--sp-3); }
+.ws-meta dl { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); margin: 0; }
+.ws-meta dl > div { display: flex; align-items: baseline; gap: 6px; }
+.ws-meta dt {
+  font-size: var(--fs-xs);
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+.ws-meta dd {
+  margin: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.ws-meta__skip { color: var(--text-3); font-weight: normal; }
+
+.ws-historic {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--panel-radius) var(--panel-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+}
+.ws-historic svg { color: var(--text-3); flex: none; }
+
+/* ───────────── goal ───────────── */
+/* 收起时一行（≤48px）：标签 + 一行目标 + 展开键 + 元信息；展开才看全文. 太窄时元信息自己换到第二行. */
+.ws-goal { gap: 0; padding: var(--sp-2) var(--sp-4); }
+.ws-goal__row { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--sp-3); min-height: 32px; min-width: 0; }
+.ws-goal__label { flex: none; }
+.ws-goal__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--sp-3); margin-left: auto; font-size: var(--fs-xs); color: var(--text-3); }
+.ws-goal__meta > li + li::before { content: "·"; margin-right: var(--sp-3); color: var(--text-4); }
+.ws-goal__agents { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.ws-goal__stack { display: inline-flex; gap: 2px; }
+/* 命途图标每个 18px、间距 2px、不重叠；圆底让昼 / 夜里都认得出 */
+.ws-goal__mark { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--surface-strong); box-shadow: inset 0 0 0 1px var(--line-2); }
+.ws-goal__text {
+  flex: 1 1 240px;
+  min-width: 0;
+  margin: 0;
+  font-size: var(--fs-md);
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ws-goal__text.is-clamped {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ws-goal.is-collapsed .ws-goal__text { line-height: 24px; }
+.ws-goal__toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 4px;
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  font-size: var(--fs-xs);
+  color: var(--accent);
+}
+.ws-goal__toggle:hover { color: var(--accent-strong); background: var(--surface-hover); }
+.ws-goal__toggle svg { transition: transform var(--dur-2) var(--ease); }
+.ws-goal__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+
+/* ───────────── state callout ───────────── */
+.ws-callouts { display: flex; flex-direction: column; gap: var(--sp-2); }
+/* 第 3 轮：她那一句（HerLead）和审批 / 提问 / 遗物卡 / 未竟之信所在的这一段，垫和闲聊主区一致的玻璃底，
+   不让夜景壁纸里的人物贴着官方头像露出来；整段一张连续面板，不留透明缝. 只在有她那一句时垫（朴素的 Callout 自己有面板）. */
+.ws-callouts:has(> .her-lead) {
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgb(20 16 36 / 0.62);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+}
+:root[data-mode="day"] .ws-callouts:has(> .her-lead) { background: rgb(255 254 251 / 0.72); }
+.ws-callout__tag { margin-top: var(--sp-2); }
+.ws-callout__quiet { margin-top: 2px; font-size: var(--fs-xs); color: var(--text-3); }
+.ws-approvals { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+/* The same approval is also in the status panel and on its step card, so here it is kept short
+   enough that the plan and the tabs stay in view while the run waits for the user. The preview is
+   capped (the code block can still be scrolled and copied) — the inline max-height from the
+   shared CodeBlock needs !important to be overridden. */
+.ws-approvals .eng-card__preview .code__pre { max-height: 200px !important; padding-bottom: 12px; }
+/* 「展开全部」之后：差异不再被裁在一个小框里（第 2 轮评审：批准前要在小框里来回滚）. */
+.ws-approvals .eng-ap[data-preview-open="true"] .eng-card__preview .code__pre { max-height: min(60vh, 520px) !important; }
+/* Wide enough: facts and buttons on the left, the preview beside them instead of underneath. */
+@container ws (min-width: 720px) {
+  .ws-approvals .eng-ap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: repeat(3, auto) 1fr;
+    column-gap: var(--sp-4);
+    align-items: start;
+  }
+  .ws-approvals .eng-ap > * { grid-column: 1; }
+  .ws-approvals .eng-ap .eng-card__preview { grid-column: 2; grid-row: 1 / span 4; }
+  .ws-approvals .eng-ap .eng-actions { align-self: end; }
+}
+
+.ws-callout--live { animation: ws-callout-glow var(--breathe) ease-in-out infinite; }
+@keyframes ws-callout-glow {
+  0%, 100% { box-shadow: inset 3px 0 0 var(--c), 0 0 0 1px rgb(var(--blue-rgb) / 0.16), 0 0 10px -5px rgb(var(--blue-rgb) / 0.25); }
+  50%      { box-shadow: inset 3px 0 0 var(--c), 0 0 0 1px rgb(var(--blue-rgb) / 0.4), 0 0 20px -5px rgb(var(--blue-rgb) / 0.4); }
+}
+
+/* 运行完成后标题旁停着的一只小蓝闪蝶（静止，不闪）。 */
+.ws-ember {
+  display: inline-block;
+  width: 18px;
+  height: 14px;
+  margin-left: var(--sp-2);
+  vertical-align: -2px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 32'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%2362cdf0'/><stop offset='.55' stop-color='%236f9aee'/><stop offset='1' stop-color='%237a63e0'/></linearGradient></defs><g fill='url(%23g)' stroke='%231b1e52' stroke-width='2' stroke-linejoin='round'><path d='M20 15.2C17.2 7.2 9.6 2 4.6 4.2 2 5.5 2.6 10.8 7.2 15.4c3.5 3 8 2.4 12.8-.2zM20 16.6C14.9 16.8 9 19.2 8.8 24c-.1 4.4 4.2 5.8 7.2 3.2 2.6-2.3 3.5-6.6 4-10.6zM20 15.2c2.8-8 10.4-13.2 15.4-11 2.6 1.3 2 6.6-2.6 11.2-3.5 3-8 2.4-12.8-.2zM20 16.6c5.1.2 11 2.6 11.2 7.4.1 4.4-4.2 5.8-7.2 3.2-2.6-2.3-3.5-6.6-4-10.6z'/></g></svg>") center / contain no-repeat;
+  filter: drop-shadow(0 0 4px rgb(var(--blue-rgb) / 0.55));
+  transform: rotate(-12deg);
+}
+
+/* ───────────── step index badge (plan + step cards) ───────────── */
+.ws-badge {
+  --b: var(--line-strong);
+  --bf: var(--solid);
+  --bt: var(--text-2);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  font-variant-numeric: tabular-nums;
+  color: var(--bt);
+}
+.ws-badge::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  z-index: -1;
+  transform: rotate(45deg);
+  border-radius: 5px;
+  border: 1px solid var(--b);
+  background: var(--bf);
+}
+:is(.ws-plan__item, .ws-step)[data-status="done"] .ws-badge { --b: color-mix(in srgb, var(--tone-success) 70%, transparent); --bf: var(--tone-success-soft); --bt: var(--tone-success); }
+:is(.ws-plan__item, .ws-step)[data-status="running"] .ws-badge { --b: var(--accent); --bf: var(--accent-soft); --bt: var(--accent); }
+:is(.ws-plan__item, .ws-step)[data-status="awaiting"] .ws-badge { --b: var(--gold); --bf: var(--gold-soft); --bt: var(--gold); }
+:is(.ws-plan__item, .ws-step)[data-status="failed"] .ws-badge { --b: var(--tone-danger); --bf: var(--tone-danger-soft); --bt: var(--tone-danger); }
+:is(.ws-plan__item, .ws-step)[data-status="failed"] .ws-badge::before { border-style: dashed; }
+:is(.ws-plan__item, .ws-step)[data-live="true"] .ws-badge::before { box-shadow: 0 0 10px -1px rgb(var(--accent-rgb) / 0.55); }
+:is(.ws-plan__item, .ws-step)[data-live="true"][data-status="awaiting"] .ws-badge::before { box-shadow: 0 0 10px -1px rgb(var(--gold-rgb) / 0.55); }
+
+/* ───────────── plan ───────────── */
+.ws-plan { min-height: 0; }
+.ws-plan__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: var(--sp-2) var(--sp-2) var(--sp-3);
+}
+.ws-plan__list { display: flex; flex-direction: column; }
+.ws-plan__item {
+  --rail-a: var(--line-2);
+  --rail-b: var(--line-2);
+  position: relative;
+}
+.ws-plan__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--sp-3);
+  width: 100%;
+  padding: 10px var(--sp-3);
+  text-align: left;
+  color: inherit;
+  border: 1px solid transparent;
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-2) var(--ease);
+}
+.ws-plan__step:hover { background: var(--surface-hover); }
+.ws-plan__main { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ws-plan__title {
+  padding-top: 4px;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
+  line-height: 1.4;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.ws-plan__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px var(--sp-2); }
+.ws-plan__agent { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-2); }
+.ws-plan__dur { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ws-plan__note {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+
+/* The running / waiting / failed step stands out without relying on colour alone: it also has a
+   different surface, a border style and its own status chip. */
+.ws-plan__item[data-current="true"] .ws-plan__step { background: var(--accent-soft); border-color: var(--accent-line); }
+.ws-plan__item[data-current="true"][data-status="awaiting"] .ws-plan__step { background: var(--gold-soft); border-color: rgb(var(--gold-rgb) / 0.45); box-shadow: var(--glow-gold); }
+.ws-plan__item[data-live="true"][data-status="awaiting"] .ws-plan__step { animation: ws-glow-gold var(--breathe) ease-in-out infinite; }
+@keyframes ws-glow-gold {
+  0%, 100% { box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.2), 0 0 10px -5px rgb(var(--gold-rgb) / 0.28); }
+  50%      { box-shadow: 0 0 0 1px rgb(var(--gold-rgb) / 0.5), 0 0 22px -4px rgb(var(--gold-rgb) / 0.42); }
+}
+.ws-plan__item[data-live="true"] .ws-plan__step { animation: ws-glow var(--breathe) ease-in-out infinite; }
+.ws-plan__item[data-status="failed"] .ws-plan__step { border: 1px dashed rgb(var(--danger-rgb) / 0.55); background: var(--tone-danger-soft); }
+@keyframes ws-glow {
+  0%, 100% { box-shadow: 0 0 0 1px rgb(var(--blue-rgb) / 0.16), 0 0 10px -5px rgb(var(--blue-rgb) / 0.25); }
+  50%      { box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.4), 0 0 22px -4px rgb(var(--accent-rgb) / 0.42); }
+}
+
+/* Connector between index badges: lit energy for finished segments, dim for the rest. */
+.ws-plan__item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  left: 26px;
+  top: 37px;
+  bottom: -10px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--rail-a), var(--rail-b));
+}
+.ws-plan__item[data-status="done"] { --rail-a: var(--accent); --rail-b: var(--blue); }
+.ws-plan__item[data-status="done"]:not(:last-child)::after { box-shadow: 0 0 8px -1px rgb(var(--accent-rgb) / 0.45); }
+.ws-plan__item[data-current="true"] { --rail-a: var(--accent-line); --rail-b: transparent; }
+
+/* 窄栏下的计划摘要（第 2 轮评审）：非待批状态默认收成一行（44px：标题 + 「2/3 完成 ▸ 展开」），宽栏的侧边竖轨不用它. */
+.ws-plan__sum { display: none; }
+@container ws (max-width: 979px) {
+  .ws-plan__sum {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-3);
+    min-height: 28px;
+    padding: 0 6px 0 10px;
+    border-radius: var(--control-radius);
+    corner-shape: var(--corner);
+    font-size: var(--fs-sm);
+    color: var(--text-2);
+    font-variant-numeric: tabular-nums;
+  }
+  .ws-plan__sum:hover { background: var(--surface-hover); color: var(--text); }
+  .ws-plan__sum-act { display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-xs); color: var(--accent); }
+  .ws-plan__sum-act svg { transition: transform var(--dur-2) var(--ease); }
+  .ws-plan__sum[aria-expanded="true"] .ws-plan__sum-act svg { transform: rotate(180deg); }
+  .ws-plan[data-folded="true"] .panel__header { min-height: 44px; padding-block: 0; }
+  .ws-plan[data-folded="true"] .ws-plan__body { display: none; }}
+
+/* Plan being drawn up. */
+.ws-plan__empty { display: flex; flex-direction: column; gap: var(--sp-4); padding: var(--sp-4); }
+.ws-plan__hint { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-2); }
+.ws-plan__skeleton { display: flex; flex-direction: column; gap: var(--sp-3); }
+.ws-plan__skeleton li {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: center;
+  padding: 2px var(--sp-1);
+  border-radius: var(--control-radius);
+}
+.ws-plan__skeleton i { width: 18px; height: 18px; margin: auto; border-radius: 4px; transform: rotate(45deg); background: rgb(var(--hair-rgb) / 0.1); }
+.ws-plan__skeleton b { display: block; height: 12px; border-radius: 6px; background: rgb(var(--hair-rgb) / 0.1); width: 82%; }
+.ws-plan__skeleton li:nth-child(2) b { width: 64%; }
+.ws-plan__skeleton li:nth-child(3) b { width: 90%; }
+.ws-plan__skeleton li:nth-child(4) b { width: 52%; }
+.ws-plan__skeleton li::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgb(var(--hair-rgb) / 0.16), transparent);
+  transform: translateX(-100%);
+  animation: ws-skeleton 1.7s ease-in-out infinite;
+}
+.ws-plan__skeleton li[data-still="true"]::after { display: none; }
+@keyframes ws-skeleton { to { transform: translateX(100%); } }
+
+/* Narrow: the same list becomes a horizontal stepper (badge row with a rail, title beneath). */
+@container ws (max-width: 979px) {
+  .ws-plan .panel__header { min-height: 40px; padding-block: 6px; }
+  .ws-plan .panel__titles { flex-direction: row; align-items: baseline; gap: var(--sp-2); }
+  .ws-plan__body { overflow-x: auto; overflow-y: hidden; padding: var(--sp-2) var(--sp-3) var(--sp-3); }
+  .ws-plan__list { flex-direction: row; width: max-content; min-width: 100%; }
+  .ws-plan__item { flex: 0 0 clamp(176px, 22cqw, 236px); }
+  .ws-plan__step { grid-template-columns: minmax(0, 1fr); gap: 8px; height: 100%; align-content: start; padding: 6px 12px 10px 6px; }
+  .ws-plan__title { padding-top: 0; }
+  .ws-plan__agent-name { display: none; }
+  .ws-plan__note { -webkit-line-clamp: 2; line-clamp: 2; }
+  .ws-plan__item:not(:last-child)::after {
+    left: 40px;
+    right: -5px;
+    top: 20px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+    background: linear-gradient(90deg, var(--rail-a), var(--rail-b));
+  }
+  .ws-plan__empty { padding: var(--sp-3) var(--sp-4); gap: var(--sp-3); }
+  .ws-plan__skeleton { flex-direction: row; }
+  .ws-plan__skeleton li { flex: 1; min-width: 96px; }}
+
+/* ───────────── tabbed main panel ───────────── */
+.ws-main { min-height: 0; }
+.ws-main__bar { gap: var(--sp-3); flex-wrap: wrap; }
+.ws-main__panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+/* ───────────── conversation ───────────── */
+.ws-conv { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ws-conv__stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+/* 第 3 轮：工作页的对话面板不再被计划卡 / 审批卡挤到只剩 150–200 px——最新一组她的话（头像 + 名牌 + 气泡）至少放得下. 闲聊页整页都是对话，不用. */
+.ws-conv:not(.ws-conv--chat) .ws-conv__stage { min-height: 260px; }
+.ws-conv__scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scroll-padding-top: 12px;
+  /* 滚动区上沿 4px 的软边（第 8 轮）：只在没有吸顶名牌时生效，且不落在字上（内边距 16px 在软边之下，第一行的名牌不受影响）.
+     有吸顶名牌时（data-stick）不要任何遮罩——名牌条是不透明实底，内容从它下沿干净地切开，下面没有渐隐带. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 4px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 4px);
+}
+.ws-conv__scroll[data-stick] { -webkit-mask-image: none; mask-image: none; }
+.ws-conv__log, .ws-conv__group { display: flex; flex-direction: column; gap: var(--sp-3); }
+.ws-conv__empty { text-align: center; color: var(--text-3); font-size: var(--fs-sm); }
+.ws-conv__divider {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.ws-conv__divider::before, .ws-conv__divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.ws-conv__viewing {
+  padding: 0 6px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--chip-radius);
+  corner-shape: var(--corner);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: var(--fs-2xs);
+  line-height: 16px;
+}
+.ws-conv__jump {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--sp-3);
+  width: fit-content;
+  margin-inline: auto;
+  box-shadow: var(--shadow-pop);
+}
+
+.ws-msg { min-width: 0; }
+.ws-msg--user { align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: min(640px, 88%); }
+.ws-msg--user .ws-msg__head { justify-content: flex-end; }
+.ws-msg--agent { align-self: flex-start; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: var(--sp-3); max-width: min(760px, 100%); }
+.ws-msg--system { align-self: center; max-width: 90%; padding: 2px var(--sp-3); text-align: center; font-size: var(--fs-xs); line-height: 1.6; color: var(--text-3); }
+.ws-msg--system .ws-msg__time { margin-left: var(--sp-2); }
+.ws-msg__col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ws-msg__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--sp-2); min-height: 22px; }
+.ws-msg__name { font-size: var(--fs-sm); font-weight: var(--fw-semibold); color: var(--text); }
+.ws-msg__time { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ws-msg__bubble {
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-strong);
+  color: var(--text);
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ws-msg--user .ws-msg__bubble {
+  background: linear-gradient(180deg, rgb(var(--ink-rgb) / 0.15), rgb(var(--ink-rgb) / 0.08));
+  border-color: rgb(var(--ink-rgb) / 0.3);
+}
+.ws-msg[data-kind="plan"] .ws-msg__bubble { box-shadow: inset 3px 0 0 var(--accent-line); }
+.ws-msg[data-kind="summary"] .ws-msg__bubble { border-color: rgb(var(--ok-rgb) / 0.36); box-shadow: inset 3px 0 0 var(--tone-success); }
+.ws-msg[data-kind="error"] .ws-msg__bubble {
+  border: 1px dashed rgb(var(--danger-rgb) / 0.55);
+  background: linear-gradient(90deg, var(--tone-danger-soft), transparent 70%), var(--surface-strong);
+}
+
+.ws-kind {
+  --c: var(--tone-neutral);
+  --c-soft: var(--tone-neutral-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  padding: 0 6px;
+  border: 1px solid color-mix(in srgb, var(--c) 32%, transparent);
+  border-radius: var(--chip-radius);
+  corner-shape: var(--corner);
+  background: var(--c-soft);
+  color: var(--c);
+  font-size: var(--fs-2xs);
+  font-weight: var(--fw-medium);
+  line-height: 1;
+  white-space: nowrap;
+}
+.ws-kind--info    { --c: var(--tone-info);    --c-soft: var(--tone-info-soft); }
+.ws-kind--success { --c: var(--tone-success); --c-soft: var(--tone-success-soft); }
+.ws-kind--danger  { --c: var(--tone-danger);  --c-soft: var(--tone-danger-soft); border-style: dashed; }
+
+.ws-typing {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: 100%;
+  padding: 4px var(--sp-3) 4px 4px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--chip-radius);
+  corner-shape: var(--corner);
+  background: var(--accent-soft);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+.ws-typing__text { min-width: 0; overflow-wrap: anywhere; }
+.ws-typing__dots { display: inline-flex; gap: 3px; flex: none; }
+.ws-typing__dots i { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); animation: ws-dot 1.3s ease-in-out infinite; }
+.ws-typing__dots i:nth-child(2) { animation-delay: 0.16s; }
+.ws-typing__dots i:nth-child(3) { animation-delay: 0.32s; }
+@keyframes ws-dot {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40%           { opacity: 1; transform: translateY(-2px); }
+}
+
+/* ───────────── steps ───────────── */
+.ws-steps { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ws-steps__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.ws-steps__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: var(--sp-4); overscroll-behavior: contain; }
+.ws-steps__list { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+.ws-step {
+  scroll-margin-top: var(--sp-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  background: rgb(255 255 255 / 0.02);
+  transition: border-color var(--dur-2) var(--ease), background var(--dur-2) var(--ease);
+}
+.ws-step__head { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--sp-3); align-items: start; }
+.ws-step__title { padding-top: 4px; font-size: var(--fs-md); line-height: 1.4; overflow-wrap: anywhere; }
+.ws-step__sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--sp-3); margin-top: 4px; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ws-step__agent { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+.ws-step__body { display: flex; flex-direction: column; gap: var(--sp-3); padding-left: calc(28px + var(--sp-3)); min-width: 0; }
+.ws-step__idle { padding-left: calc(28px + var(--sp-3)); font-size: var(--fs-sm); color: var(--text-3); }
+.ws-step__detail { font-size: var(--fs-sm); line-height: 1.65; color: var(--text-2); }
+.ws-step__note, .ws-step__carried, .ws-step__thinking { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); line-height: 1.6; color: var(--text-2); }
+.ws-step__note { flex-wrap: nowrap; align-items: flex-start; }
+.ws-step__note svg { flex: none; margin-top: 3px; color: var(--text-3); }
+.ws-step__note[data-tone="danger"], .ws-step__note[data-tone="danger"] svg { color: var(--tone-danger); }
+.ws-step__thinking { align-items: center; flex-wrap: nowrap; }
+.ws-step__calls { display: flex; flex-direction: column; gap: var(--sp-2); }
+.ws-step__calls > li { min-width: 0; }
+
+.ws-link {
+  padding: 0 2px;
+  border-radius: 3px;
+  color: var(--accent);
+  font-size: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ws-link:hover { color: var(--accent-strong); background: var(--surface-hover); }
+
+.ws-pulse {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: ff-breathe-dot var(--breathe) ease-in-out infinite;
+}
+
+/* Step card states: running breathes, waiting is gold, failed is dashed, not-started is quiet. */
+.ws-step[data-status="running"] { border-color: var(--accent-line); background: linear-gradient(180deg, var(--accent-soft), transparent 70%), rgb(255 255 255 / 0.02); }
+.ws-step[data-live="true"] { animation: ws-glow var(--breathe) ease-in-out infinite; }
+.ws-step[data-status="awaiting"] { border-color: rgb(var(--gold-rgb) / 0.45); box-shadow: var(--glow-gold); }
+.ws-step[data-status="failed"] { border: 1px dashed rgb(var(--danger-rgb) / 0.55); background: linear-gradient(180deg, var(--tone-danger-soft), transparent 70%), rgb(255 255 255 / 0.02); }
+.ws-step[data-idle="true"] { gap: var(--sp-1); padding-block: var(--sp-2); background: transparent; }
+.ws-step[data-flash="true"] { animation: ws-flash 1.6s var(--ease); }
+@keyframes ws-flash {
+  0%   { box-shadow: 0 0 0 2px var(--accent), 0 0 26px -2px rgb(var(--accent-rgb) / 0.6); }
+  100% { box-shadow: 0 0 0 2px transparent, 0 0 0 transparent; }
+}
+
+@container ws (max-width: 560px) {
+  .ws-step__body, .ws-step__idle { padding-left: 0; }
+  .ws-step__head { grid-template-columns: 28px minmax(0, 1fr); }
+  .ws-step__head > .chip { grid-column: 2; justify-self: start; }}
+
+/* ───────────── artifacts ───────────── */
+.ws-arts { flex: 1; min-height: 0; display: flex; container: arts / inline-size; }
+.ws-arts__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); }
+.ws-arts__list { min-height: 0; overflow-y: auto; padding: var(--sp-2); border-right: 1px solid var(--line); }
+.ws-arts__listbar { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: var(--sp-1) var(--sp-2) var(--sp-2); }
+.ws-arts__list ul { display: flex; flex-direction: column; gap: 2px; }
+.ws-art {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-2) var(--ease);
+}
+.ws-art:hover { background: var(--surface-hover); }
+.ws-art[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); }
+.ws-art__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+  color: var(--accent);
+}
+.ws-art__main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ws-art__name { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text); overflow-wrap: anywhere; line-height: 1.4; }
+.ws-art__step, .ws-art__meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-xs); color: var(--text-3); }
+
+.ws-arts__preview { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.ws-arts__head {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2) var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+.ws-arts__title { min-width: 0; }
+.ws-arts__title h3 { font-size: var(--fs-md); line-height: 1.4; overflow-wrap: anywhere; }
+.ws-arts__title p { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ws-arts__tools { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.ws-arts__content { flex: 1; min-height: 0; overflow: auto; padding: var(--sp-4); overscroll-behavior: contain; }
+.ws-arts__content.is-doc { padding: var(--sp-5) var(--sp-6); }
+
+@container arts (max-width: 640px) {
+  .ws-arts__grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .ws-arts__list { max-height: 184px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .ws-arts__content.is-doc { padding: var(--sp-4); }}
+
+/* ───────────── Markdown document ───────────── */
+.ws-md { max-width: 72ch; font-size: var(--fs-md); line-height: 1.8; color: var(--text); overflow-wrap: anywhere; }
+.ws-md > * + * { margin-top: var(--sp-3); }
+.ws-md__h { line-height: 1.35; letter-spacing: 0.01em; color: var(--text); }
+.ws-md__h1 {
+  padding-bottom: var(--sp-2);
+  font-size: var(--fs-xl);
+  background: var(--river-line) left bottom / 100% 1px no-repeat;
+}
+.ws-md > .ws-md__h2 { margin-top: var(--sp-6); font-size: var(--fs-lg); }
+.ws-md > .ws-md__h3 { margin-top: var(--sp-5); font-size: var(--fs-md); color: var(--text-2); }
+.ws-md ul, .ws-md ol { padding-left: 1.5em; }
+.ws-md ul { list-style: disc; }
+.ws-md ol { list-style: decimal; }
+.ws-md li::marker { color: var(--accent); }
+.ws-md li + li { margin-top: 2px; }
+.ws-md li > ul, .ws-md li > ol, .ws-md li > p { margin-top: 2px; }
+.ws-md strong { font-weight: var(--fw-semibold); }
+.ws-md a { color: var(--accent); }
+.ws-md blockquote {
+  padding: var(--sp-2) var(--sp-4);
+  border-left: 3px solid var(--accent-line);
+  border-radius: 0 var(--card-radius) var(--card-radius) 0;
+  corner-shape: var(--corner);
+  background: var(--accent-soft);
+  color: var(--text-2);
+}
+.ws-md blockquote > * + * { margin-top: var(--sp-2); }
+.ws-md hr { height: 1px; border: 0; background: var(--river-line); opacity: var(--river-opacity); }
+.ws-md__code-inline {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgb(var(--hair-rgb) / 0.09);
+  color: var(--accent-strong);
+  font-size: 0.9em;
+}
+.ws-md__table { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--card-radius); corner-shape: var(--corner); }
+.ws-md table { width: 100%; min-width: 32em; border-collapse: collapse; font-size: var(--fs-sm); line-height: 1.6; }
+.ws-md th, .ws-md td { padding: 8px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.ws-md th { background: var(--surface-raised); color: var(--text); font-weight: var(--fw-semibold); }
+.ws-md th:first-child, .ws-md td:first-child { min-width: 6em; }
+.ws-md tbody tr:last-child td { border-bottom: 0; }
+.ws-md tbody tr:nth-child(even) td { background: rgb(255 255 255 / 0.02); }
+
+/* ───────────── reduced motion: no loops, but the state still reads ───────────── */
+:root[data-motion="reduced"] .ws-sweep { display: none !important; }
+:root[data-motion="reduced"] .ws-plan__item[data-live="true"] .ws-plan__step,
+:root[data-motion="reduced"] .ws-step[data-live="true"] {
+  animation: none !important;
+  box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / 0.4), 0 0 16px -5px rgb(var(--accent-rgb) / 0.38);
+}
+:root[data-motion="reduced"] .ws-plan__item[data-live="true"][data-status="awaiting"] .ws-plan__step {
+  animation: none !important;
+  box-shadow: var(--glow-gold);
+}
+:root[data-motion="reduced"] .ws-callout--live {
+  animation: none !important;
+  box-shadow: inset 3px 0 0 var(--c), 0 0 0 1px rgb(var(--accent-rgb) / 0.32), 0 0 16px -6px rgb(var(--accent-rgb) / 0.32);
+}
+:root[data-motion="reduced"] .ws-step[data-flash="true"] { animation: none !important; box-shadow: 0 0 0 2px var(--accent); }
+:root[data-motion="reduced"] .ws-ember,
+:root[data-motion="reduced"] .ws-pulse { animation: none !important; opacity: 1; transform: none; }
+:root[data-motion="reduced"] .ws-typing__dots i { animation: none !important; opacity: 1; transform: none; }
+:root[data-motion="reduced"] .ws-plan__skeleton li::after { display: none; }
+
+/* ───────────── focus ───────────── */
+/* base.css gives every focus ring the control radius; keep the real shape of larger surfaces,
+   and draw the ring inside scroll regions so a neighbour cannot hide it. */
+.ws-step:focus-visible, .ws-plan__step:focus-visible, .ws-art:focus-visible { border-radius: var(--card-radius); }
+.ws-conv__scroll:focus-visible, .ws-steps__scroll:focus-visible, .ws-arts__content:focus-visible, .ws-md__table:focus-visible {
+  border-radius: 0;
+  outline-offset: -2px;
+}
+
+/* Wallpaper on: the selected artifact row gets a solid backing so its grey meta text keeps 4.5:1
+   at any 面板通透度 (the translucent mint tint alone let the art lift it). */
+:root[data-wallpaper="on"] .ws-art[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 13%, var(--solid)); }
+:root[data-wallpaper="on"] .ws-art[aria-pressed="true"] .ws-art__step,
+:root[data-wallpaper="on"] .ws-art[aria-pressed="true"] .ws-art__meta { color: var(--text-2); }

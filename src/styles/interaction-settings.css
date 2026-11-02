@@ -1,0 +1,62 @@
+/* 栖枝 · 设置页里属于交互模块的部分（B4）：称呼、话量三张试听卡、记得小事清单、键盘列表分组、关于与免责声明. */
+
+.settings-callname { width: 200px; }
+
+/* 话量试听卡所在的这一栏自己是查询容器：按「这一栏」的宽度排，不按整张设置页（双栏设置页里整页宽 ≠ 这一栏宽）。
+   < 720 一律上下叠放（三种说法上下对照，夜昼一致）；够宽才三列. */
+.settings-item--level { container-type: inline-size; container-name: voice-level; }
+.distance-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-3, 12px); margin-top: var(--sp-3, 12px); }
+@container voice-level (min-width: 720px) { .distance-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.distance-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: var(--r-md, 10px);
+  border: 1px solid var(--line, rgb(214 190 226 / 0.2));
+  background: var(--surface-sunken, rgb(14 12 28 / 0.4));
+  color: var(--text, #f4f0f7);
+  cursor: pointer;
+}
+.distance-card:hover { border-color: var(--accent, rgb(214 190 226 / 0.5)); }
+.distance-card.is-on { border-color: var(--accent-strong, var(--accent, #d6c1e0)); box-shadow: inset 0 0 0 0.5px var(--accent-strong, var(--accent)); background: color-mix(in srgb, var(--accent, #d6c1e0) 14%, transparent); }
+:root[data-mode="day"] .distance-card.is-on { border-width: 1.5px; padding: 11.5px 13.5px; background: color-mix(in srgb, var(--accent) 10%, #fffefb); box-shadow: none; }
+.distance-card__name { display: flex; align-items: center; gap: 8px; }
+/* 选中的那张自己说一声「当前」：不只靠底色区分. */
+.distance-card__now { display: inline-flex; align-items: center; height: 18px; padding: 0 8px; border-radius: 9px; font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: var(--on-accent, #1f1030); background: var(--accent, #c6aed3); }
+.distance-card:has(input:focus-visible) { outline: 2px solid var(--accent, #d6c1e0); outline-offset: 2px; }
+.distance-card input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.distance-card__name { font-size: var(--fs-md, 14px); font-weight: 600; }
+.distance-card__sub { text-wrap: pretty; font-size: var(--fs-xs, 12px); line-height: 1.6; color: var(--text-2, #d8cfe0); }
+.distance-card__sample small { display: block; margin-bottom: 1px; font-family: var(--font-sans, inherit); font-size: var(--fs-xs, 12px); color: var(--text-3, #b7aac6); }
+.distance-card__sample { text-wrap: pretty; margin-top: 4px; padding-top: 6px; border-top: 1px dashed var(--line, rgb(214 190 226 / 0.25)); font-family: var(--font-serif, serif); font-size: var(--fs-sm, 13px); line-height: 1.7; color: var(--text, #f4f0f7); }
+
+.settings-keys__group { display: inline-block; min-width: 4.5em; margin-right: 8px; font-size: var(--fs-xs, 12px); color: var(--text-3, #b7aac6); }
+.settings-keys__note { margin-top: var(--sp-3, 12px); font-size: var(--fs-xs, 12px); line-height: 1.7; color: var(--text-3, #b7aac6); }
+
+.settings-terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--sp-3, 12px) var(--sp-6, 24px); margin-bottom: var(--sp-4, 16px); }
+.settings-terms__section h3 { font-size: var(--fs-sm, 13px); font-weight: 600; color: var(--text, #f4f0f7); margin-bottom: 4px; }
+.settings-terms__section p { font-size: var(--fs-sm, 13px); line-height: 1.8; color: var(--text-2, #d8cfe0); }
+
+/* 记得小事的清单 */
+.memory-list { display: flex; flex-direction: column; gap: var(--sp-3, 12px); margin-top: var(--sp-3, 12px); padding-top: var(--sp-3, 12px); border-top: 1px dashed var(--line, rgb(214 190 226 / 0.25)); }
+.memory-list__note, .memory-list__limit, .memory-list__empty { margin: 0; font-size: var(--fs-xs, 12px); line-height: 1.7; color: var(--text-3, #b7aac6); }
+.memory-group__title { display: flex; align-items: baseline; gap: 6px; margin: 0 0 4px; font-size: var(--fs-sm, 13px); font-weight: 600; color: var(--text, #f4f0f7); }
+.memory-group__title span { font-size: var(--fs-xs, 12px); font-weight: 400; color: var(--text-3, #b7aac6); }
+.memory-group.is-orphan .memory-group__title { color: var(--gold, #e6c88a); }
+.memory-group__rows { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.memory-row { display: flex; align-items: center; gap: 8px; }
+.memory-row__input { flex: 1; min-width: 0; }
+.memory-row__text { flex: 1; min-width: 0; font-size: var(--fs-sm, 13px); line-height: 1.7; color: var(--text-2, #d8cfe0); overflow-wrap: anywhere; }
+.memory-row__del { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--r-sm, 8px); background: none; color: var(--text-3, #b7aac6); cursor: pointer; }
+.memory-row__del:hover { color: var(--tone-danger, #f28ba3); background: var(--surface-hover, rgb(255 255 255 / 0.06)); }
+.memory-row__del:focus-visible { outline: 2px solid var(--accent, #d6c1e0); outline-offset: 2px; }
+.memory-add { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.memory-add__input { flex: 1 1 200px; min-width: 0; }
+
+/* 动效档：分段控件和提示靠左，与同一列里「图形处理器」「减少动态效果」的分段控件对齐（r3）. */
+.settings-row__control .settings-tier { align-items: flex-start; }
+.settings-row__control .settings-tier .settings-tier__note { text-align: left; }
+/* 夜 + 壁纸：设置卡的玻璃再实一点，左列说明文字不直接压在雪枝和蝶上（backdrop-filter 保持）. */
+:root[data-mode="night"][data-wallpaper="on"] .settings-view .panel { background-image: linear-gradient(rgb(20 15 36 / 0.5), rgb(20 15 36 / 0.5)); } /* 叠在 --surface 上：「玻璃」滑块仍然有效 */

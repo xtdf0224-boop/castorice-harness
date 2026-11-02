@@ -1,0 +1,18 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "meta/llama-3.1-8b-instruct",
+   "object": "model",
+   "owned_by": "meta"
+  },
+  {
+   "id": "nvidia/nv-embedqa-e5-v5",
+   "object": "model"
+  },
+  {
+   "id": "nvidia/llama-guard-4",
+   "object": "model"
+  }
+ ]
+}

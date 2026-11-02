@@ -1,0 +1,31 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "openai/gpt-oss-120b",
+   "object": "model",
+   "providers": [
+    {
+     "provider": "cerebras",
+     "status": "live",
+     "context_length": 131072,
+     "supports_tools": true
+    },
+    {
+     "provider": "groq",
+     "supports_tools": false
+    }
+   ]
+  },
+  {
+   "id": "deepseek-ai/DeepSeek-V4-Flash",
+   "object": "model",
+   "providers": [
+    {
+     "provider": "novita",
+     "supports_tools": false
+    }
+   ]
+  }
+ ]
+}

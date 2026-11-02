@@ -1,0 +1,329 @@
+/* 栖枝桌宠窗口（pet.html）。页面固定 340×590 页面像素（下面 340×360 是她，上面 230 留给聊天框 / 气泡 / 小游戏面板），
+   画在透明窗口上；桌面那边把窗口缩放到 340×590 × scale，页面用 zoom 跟着（PetApp 设置）。这里什么都不能画背景：
+   只有她、气泡、聊天框、面板、按钮存在，别处点击穿透。
+   主题挂在 <html data-theme="night|day">（来自 PetUiState.theme），颜色取主应用的令牌（src/styles/tokens.css 的 --her-bg 等）。
+   系统「减少动态效果」：PetApp 同时在根上写 data-reduced，下面两处一起管：只留眨眼、嘴型、很轻的呼吸（那是木偶自己的事），界面不放动画。 */
+:root {
+  --pet-font: 'Noto Sans SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+  --pet-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  /* 夜 · 冥河 */
+  --pet-text: #f4f0f7;
+  --pet-text-2: #d8cfe0;
+  --pet-text-3: #c0b4cf;
+  --pet-accent: #d6c1e0;
+  --pet-accent-soft: rgba(214, 193, 224, 0.13);
+  --pet-her-bg: rgba(32, 25, 56, 0.86);
+  --pet-panel: rgba(26, 20, 46, 0.95);
+  --pet-line: rgba(214, 190, 226, 0.26);
+  --pet-line-strong: rgba(214, 190, 226, 0.46);
+  --pet-me-bg: linear-gradient(180deg, #7c4ca3, #5a2f84);
+  --pet-me-fg: #f4f0f7;
+  --pet-chip: #2a2142;
+  --pet-warn: #e7b8c9;
+  --pet-shadow: 0 10px 30px rgba(0, 0, 0, 0.42);
+  --pet-hover: rgba(214, 193, 224, 0.12);
+}
+:root[data-theme='day'] {
+  /* 昼 · 花海 */
+  --pet-text: #2e2142;
+  --pet-text-2: #52446a;
+  --pet-text-3: #5d5077;
+  --pet-accent: #5a3a7e;
+  --pet-accent-soft: rgba(90, 58, 126, 0.09);
+  --pet-her-bg: #fffefb;
+  --pet-panel: #fffefb;
+  --pet-line: #ddd3ee;
+  --pet-line-strong: #b9a6d6;
+  --pet-me-bg: linear-gradient(180deg, #6f4a93, #58377d);
+  --pet-me-fg: #fff;
+  --pet-chip: #ece5f6;
+  --pet-warn: #9c3d5f;
+  --pet-shadow: 0 10px 30px rgba(60, 40, 90, 0.2);
+  --pet-hover: rgba(90, 58, 126, 0.08);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+body {
+  font: 14px/1.55 var(--pet-font);
+  color: var(--pet-text);
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+button { font: inherit; color: inherit; }
+
+.pet { position: relative; width: 340px; height: 590px; }
+/* 头顶 230：聊天框、占卜面板、引蝶结果；平时什么都不画，点击穿得过去。 */
+.pet-top { position: absolute; top: 0; left: 0; right: 0; height: 230px; padding: 0 8px 6px; display: flex; align-items: flex-end; justify-content: center; }
+
+/* ───── 她 ───── */
+.pet-stage { position: absolute; left: 0; bottom: 0; z-index: 1; }
+.pet-rig { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+/* 没有 WebGL2 或木偶出错：一张静态母版图，显示尺寸（页面像素）不超过源图 984×1413。 */
+.pet-fallback { position: absolute; left: 65px; bottom: 0; width: 210px; height: 300px; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.pet-hitbox { position: absolute; cursor: grab; touch-action: none; outline: none; }
+.pet-hitbox:active { cursor: grabbing; }
+
+.pet-badges { position: absolute; top: 64px; left: 10px; display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+.pet-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+  background: var(--pet-her-bg); border: 1px solid var(--pet-line); color: var(--pet-accent);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
+}
+.pet-badge--off { color: var(--pet-warn); }
+.pet-badge--live { color: var(--pet-warn); border-color: var(--pet-line-strong); }
+.pet-badge--ear { animation: pet-ear 1.1s ease-in-out infinite; }
+
+/* ───── 悬停按钮（右侧一列；「小游戏」展开的四项在它左边） ───── */
+.pet-tools { position: absolute; right: 4px; top: 74px; z-index: 4; display: flex; align-items: flex-start; gap: 6px; }
+.pet-tools__col, .pet-games { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.pet-tool {
+  display: inline-flex; align-items: center; justify-content: flex-start; gap: 5px;
+  height: 27px; padding: 0 11px 0 9px; border-radius: 14px; white-space: nowrap;
+  background: var(--pet-her-bg); border: 1px solid var(--pet-line); color: var(--pet-text-2);
+  font-size: 12px; cursor: pointer; box-shadow: var(--pet-shadow);
+  animation: pet-pop 0.14s ease-out;
+}
+.pet-games .pet-tool { padding-left: 12px; }
+.pet-tool:hover { color: var(--pet-text); border-color: var(--pet-line-strong); background: var(--pet-panel); }
+.pet-tool[data-on], .pet-tool[aria-expanded='true'] { color: var(--pet-text); border-color: var(--pet-accent); }
+.pet-tool:focus-visible { outline: 2px solid var(--pet-accent); outline-offset: 2px; }
+
+/* ───── 气泡（头顶那块的下沿，贴着她的头冠上方） ───── */
+.pet-bubble-wrap { position: absolute; left: 0; right: 0; bottom: 358px; z-index: 3; display: flex; justify-content: center; pointer-events: none; }
+.pet-bubble {
+  position: relative; max-width: 288px; min-width: 52px; margin: 0 12px 8px; padding: 9px 26px 10px 13px;
+  border-radius: 14px; background: var(--pet-her-bg); border: 1px solid var(--pet-line); color: var(--pet-text);
+  box-shadow: var(--pet-shadow); cursor: default; pointer-events: auto; animation: pet-pop 0.18s ease-out;
+}
+.pet-bubble::after {
+  content: ''; position: absolute; left: 50%; bottom: -7px; width: 12px; height: 12px; margin-left: -6px;
+  background: var(--pet-her-bg); border-right: 1px solid var(--pet-line); border-bottom: 1px solid var(--pet-line); transform: rotate(45deg);
+}
+.pet-bubble__text {
+  margin: 0; font-size: 13px;
+  /* 8 行：一句（最多约 140 字，每行 17 字左右）不点「展开」就能读完；头顶这块一共 230 高，装得下。 */
+  max-height: calc(8 * 1.55em); overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere;
+  -webkit-user-select: text; user-select: text;
+}
+.pet-bubble[data-open] { z-index: 2; padding-bottom: 14px; }
+.pet-bubble[data-open] .pet-bubble__text { max-height: calc(11 * 1.55em); overflow-y: auto; padding-right: 4px; scrollbar-width: thin; }
+.pet-bubble[data-streaming] .pet-bubble__text::after { content: '▍'; margin-left: 1px; color: var(--pet-accent); animation: pet-caret 1s steps(2) infinite; }
+.pet-bubble__more { display: inline-block; margin: 3px 0 -2px; padding: 0; border: 0; background: none; color: var(--pet-accent); font-size: 12px; cursor: pointer; }
+.pet-bubble__more:hover { text-decoration: underline; }
+.pet-bubble__close {
+  position: absolute; top: 4px; right: 5px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--pet-text-3); font-size: 15px; line-height: 20px; cursor: pointer; opacity: 0; transition: opacity 0.12s;
+}
+.pet-bubble:hover .pet-bubble__close, .pet-bubble__close:focus-visible { opacity: 1; }
+.pet-bubble__close:hover { color: var(--pet-text); background: var(--pet-hover); }
+.pet-bubble__more:focus-visible, .pet-bubble__close:focus-visible { outline: 2px solid var(--pet-accent); outline-offset: 2px; }
+
+/* ───── 聊天框 ───── */
+.pet-chat {
+  position: relative; flex: none; width: 324px; height: 222px; display: flex; flex-direction: column;
+  border-radius: 16px; background: var(--pet-panel); border: 1px solid var(--pet-line); box-shadow: var(--pet-shadow);
+  animation: pet-pop 0.18s ease-out;
+}
+.pet-chat__head { position: relative; flex: none; display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 10px; border-bottom: 1px solid var(--pet-line); }
+.pet-chat__who { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
+/* 名字用衬线体 */
+.pet-chat__name { font: 600 15px/1.25 var(--pet-serif); letter-spacing: 0.06em; }
+.pet-chat__state { font-size: 11px; color: var(--pet-text-3); }
+.pet-chat__state::before { content: ''; display: inline-block; width: 6px; height: 6px; margin: 0 5px 1px 0; border-radius: 50%; background: var(--pet-accent); vertical-align: middle; opacity: 0.7; }
+.pet-chat__state[data-doing] { color: var(--pet-accent); }
+.pet-chat__state[data-doing]::before { opacity: 1; animation: pet-glow 1s ease-in-out infinite; }
+.pet-chat__icon {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%;
+  background: none; color: var(--pet-text-3); cursor: pointer;
+}
+.pet-chat__close { font-size: 18px; line-height: 26px; }
+.pet-chat__icon:hover { color: var(--pet-text); background: var(--pet-hover); }
+.pet-chat__menu {
+  position: absolute; top: 38px; right: 6px; z-index: 5; min-width: 130px; padding: 4px;
+  border-radius: 10px; background: var(--pet-panel); border: 1px solid var(--pet-line-strong); box-shadow: var(--pet-shadow);
+}
+.pet-chat__menu button { display: block; width: 100%; padding: 6px 10px; border: 0; border-radius: 7px; background: none; text-align: left; font-size: 12px; color: var(--pet-text-2); cursor: pointer; }
+.pet-chat__menu button:hover { background: var(--pet-hover); color: var(--pet-text); }
+
+/* 标题下的接龙 / 童话状态条 */
+.pet-chat__game { flex: none; display: flex; align-items: center; gap: 8px; padding: 3px 6px 3px 12px; background: var(--pet-accent-soft); border-bottom: 1px solid var(--pet-line); font-size: 12px; color: var(--pet-text-2); }
+.pet-chat__gametext { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pet-chat__stop { flex: none; padding: 1px 9px; border: 1px solid var(--pet-line-strong); border-radius: 11px; background: none; font-size: 11px; color: var(--pet-text-2); cursor: pointer; }
+.pet-chat__stop:hover { background: var(--pet-hover); color: var(--pet-text); }
+
+.pet-chat__body { position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.pet-chat__log {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 8px 8px 4px; display: flex; flex-direction: column; gap: 6px;
+  scrollbar-width: thin; scrollbar-color: var(--pet-line-strong) transparent;
+}
+.pet-chat__log:focus-visible { outline: 2px solid var(--pet-accent); outline-offset: -2px; }
+.pet-chat__empty { margin: auto; padding: 0 16px; color: var(--pet-text-3); font-size: 12px; text-align: center; }
+
+.pet-msg { display: flex; align-items: flex-end; gap: 6px; max-width: 100%; }
+.pet-msg[data-who='me'] { justify-content: flex-end; }
+.pet-msg:not([data-first]) { margin-top: -2px; }
+.pet-msg__gap { flex: none; width: 24px; }
+.pet-msg__text {
+  margin: 0; max-width: 228px; padding: 5px 10px 6px; font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere;
+  -webkit-user-select: text; user-select: text; cursor: text;
+}
+.pet-msg[data-who='her'] .pet-msg__text { background: var(--pet-accent-soft); border: 1px solid var(--pet-line); border-radius: 12px 12px 12px 4px; color: var(--pet-text); }
+.pet-msg[data-who='me'] .pet-msg__text { max-width: 232px; background: var(--pet-me-bg); color: var(--pet-me-fg); border-radius: 12px 12px 4px 12px; }
+.pet-msg[data-think] .pet-msg__text { color: var(--pet-text-3); }
+.pet-msg[data-streaming] .pet-msg__text::after { content: '▍'; margin-left: 1px; color: var(--pet-accent); animation: pet-caret 1s steps(2) infinite; }
+.pet-msg__voice { display: inline-flex; margin-right: 4px; vertical-align: -1px; opacity: 0.7; }
+/* 占卜翻出的牌：小图标 + 牌名 */
+.pet-msg__card { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+.pet-msg__card img { flex: none; width: 26px; height: 26px; object-fit: contain; }
+.pet-msg__card b { font: 600 13px/1.2 var(--pet-serif); letter-spacing: 0.05em; }
+
+/* 她的头像：从母版图里裁的圆脸（avatar.ts 给 data: 地址）；还没好时只有底色圆 */
+.pet-avatar {
+  flex: none; width: 24px; height: 24px; border-radius: 50%; background-color: var(--pet-chip); background-size: cover; background-position: center;
+  box-shadow: 0 0 0 1.5px var(--pet-line-strong);
+}
+.pet-chat__head .pet-avatar { width: 32px; height: 32px; }
+
+.pet-dots { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.pet-dots > i { width: 5px; height: 5px; border-radius: 50%; background: var(--pet-accent); animation: pet-glow 1.2s ease-in-out infinite; }
+.pet-dots > i:nth-child(2) { animation-delay: 0.2s; }
+.pet-dots > i:nth-child(3) { animation-delay: 0.4s; }
+
+.pet-chat__new {
+  position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); padding: 2px 11px; border: 1px solid var(--pet-line-strong);
+  border-radius: 11px; background: var(--pet-panel); color: var(--pet-accent); font-size: 11px; cursor: pointer;
+}
+
+.pet-chat__composer {
+  flex: none; display: flex; align-items: flex-end; gap: 6px; margin: 2px 8px 8px; padding: 4px 4px 4px 10px;
+  border-radius: 13px; background: var(--pet-accent-soft); border: 1px solid var(--pet-line); opacity: 0.8; transition: border-color 0.15s, opacity 0.15s;
+}
+.pet-chat[data-keys] .pet-chat__composer { opacity: 1; }
+.pet-chat[data-keys] .pet-chat__composer:focus-within { border-color: var(--pet-accent); }
+.pet-chat__input {
+  flex: 1; min-width: 0; /* 一到四行，随内容增高 */ field-sizing: content; min-height: calc(1.55em + 4px); max-height: calc(3 * 1.55em + 4px);
+  padding: 2px 0; border: 0; outline: 0; resize: none; background: transparent; color: var(--pet-text); font: inherit; font-size: 13px; line-height: 1.55;
+  scrollbar-width: thin; -webkit-user-select: text; user-select: text;
+}
+.pet-chat__input::placeholder { color: var(--pet-text-3); opacity: 0.8; }
+.pet-chat__count { flex: none; align-self: center; font-size: 10px; color: var(--pet-warn); font-variant-numeric: tabular-nums; }
+.pet-chat__send {
+  flex: none; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%;
+  background: var(--pet-me-bg); color: var(--pet-me-fg); cursor: pointer; transition: opacity 0.15s;
+}
+.pet-chat__send:disabled { opacity: 0.35; cursor: default; }
+.pet-chat__icon:focus-visible, .pet-chat__send:focus-visible, .pet-chat__new:focus-visible, .pet-chat__stop:focus-visible,
+.pet-card:focus-visible, .pet-game__x:focus-visible, .pet-game__link:focus-visible, .pet-letter__save:focus-visible,
+.pet-arena__stop:focus-visible, .pet-tales__back:focus-visible, .pet-letter__head:focus-visible { outline: 2px solid var(--pet-accent); outline-offset: 2px; }
+
+/* ───── 童话信笺（聊天里的一条 / 名单里的一篇） ───── */
+.pet-letter {
+  flex: 0 1 auto; max-width: 244px; padding: 9px 13px 8px; border-radius: 4px 10px 10px 10px;
+  background: #fffaf2; color: #3a2a4a; border: 1px solid #e7dac4; box-shadow: 0 3px 10px rgba(40, 20, 60, 0.22);
+  font-family: var(--pet-serif); -webkit-user-select: text; user-select: text; cursor: text;
+}
+.pet-letter::before { content: ''; display: block; height: 0; }
+.pet-letter__title { margin: 0 0 4px; font: 600 14px/1.45 var(--pet-serif); letter-spacing: 0.08em; text-align: center; color: #4b2f66; }
+.pet-letter__title::before { content: '《'; }
+.pet-letter__title::after { content: '》'; }
+.pet-letter__body { margin: 0; font: 13px/1.85 var(--pet-serif); white-space: pre-wrap; overflow-wrap: anywhere; text-indent: 2em; }
+.pet-letter[data-streaming] .pet-letter__body::after { content: '▍'; color: #8a64b0; animation: pet-caret 1s steps(2) infinite; }
+.pet-letter__foot { display: flex; justify-content: flex-end; margin-top: 4px; }
+.pet-letter__save {
+  padding: 1px 11px; border: 1px solid #b79bd0; border-radius: 11px; background: transparent; color: #5a3a7e; font: 12px var(--pet-font); cursor: pointer;
+}
+.pet-letter__save:hover:not(:disabled) { background: rgba(90, 58, 126, 0.1); }
+.pet-letter__save:disabled { cursor: default; opacity: 0.75; }
+.pet-letter__save[data-saved] { border-color: transparent; color: #6b5a7e; }
+.pet-msg[data-kind='tale'] { align-items: flex-start; }
+.pet-msg[data-kind='tale'] .pet-avatar, .pet-msg[data-kind='tale'] .pet-msg__gap { margin-top: 2px; }
+
+/* 「我们写过的童话」名单：每篇一张小信笺，点标题展开 */
+.pet-tales { gap: 8px; }
+.pet-tales__back { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--pet-accent); font-size: 12px; cursor: pointer; }
+.pet-tales__back:hover { text-decoration: underline; }
+.pet-letter--list { max-width: 100%; width: 100%; padding: 6px 12px 7px; cursor: default; }
+.pet-letter__head { display: block; width: 100%; padding: 0; border: 0; background: none; text-align: center; color: inherit; cursor: pointer; }
+.pet-letter--list .pet-letter__title { margin-bottom: 0; }
+.pet-letter__meta { display: block; font: 11px var(--pet-font); color: #7a6a8c; }
+.pet-letter--list .pet-letter__body { margin-top: 5px; }
+
+/* ───── 小游戏的面板（占卜、引蝶结果）：聊天框那块地方 ───── */
+.pet-game {
+  position: relative; flex: none; width: 324px; height: 222px; padding: 7px 12px 9px; display: flex; flex-direction: column; gap: 6px;
+  border-radius: 16px; background: var(--pet-panel); border: 1px solid var(--pet-line); box-shadow: var(--pet-shadow); animation: pet-pop 0.18s ease-out;
+}
+.pet-result { height: auto; min-height: 96px; }
+.pet-game__head { flex: none; display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.pet-game__title { flex: 1; font: 600 14px/1.3 var(--pet-serif); letter-spacing: 0.08em; }
+.pet-game__score { font-size: 12px; color: var(--pet-text-3); font-variant-numeric: tabular-nums; }
+.pet-game__link { padding: 1px 9px; border: 1px solid var(--pet-line-strong); border-radius: 11px; background: none; font-size: 11px; color: var(--pet-text-2); cursor: pointer; }
+.pet-game__link:hover { background: var(--pet-hover); color: var(--pet-text); }
+.pet-game__x { flex: none; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--pet-text-3); font-size: 18px; line-height: 24px; cursor: pointer; }
+.pet-game__x:hover { color: var(--pet-text); background: var(--pet-hover); }
+.pet-game__quote {
+  margin: 0; flex: 1 1 auto; min-height: 0; padding: 6px 10px; border-radius: 10px; background: var(--pet-accent-soft); border: 1px solid var(--pet-line);
+  font-size: 13px; line-height: 1.6; color: var(--pet-text); overflow: hidden;
+}
+
+/* 三张牌：背面深紫底、细金线的荆棘与蝶纹（Tarot.tsx 里的 SVG）；点一张，300 ms 翻开，正面是官方命途图标 */
+.pet-tarot__row { flex: none; display: flex; justify-content: center; gap: 16px; }
+.pet-card { flex: none; width: 64px; height: 100px; padding: 0; border: 0; background: none; perspective: 600px; cursor: pointer; transition: transform 0.15s, opacity 0.3s; }
+.pet-card:disabled { cursor: default; }
+.pet-card:not(:disabled):hover { transform: translateY(-4px); }
+.pet-card[data-rest] { opacity: 0.5; }
+.pet-card__in { position: relative; display: block; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.3s ease; }
+.pet-card[data-up] .pet-card__in { transform: rotateY(180deg); }
+.pet-card__face { position: absolute; inset: 0; border-radius: 6px; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.32); }
+.pet-card__back svg { display: block; }
+.pet-card__front {
+  transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  background: #f6f0fb; border: 1px solid #8a64b0; color: #3a2a4a;
+}
+.pet-card__front img { display: block; width: 44px; height: 44px; object-fit: contain; }
+.pet-card__front b { font: 600 12px/1.2 var(--pet-serif); letter-spacing: 0.06em; }
+
+/* ───── 引蝶的游戏区：窗口最下面 340×420，不挡点击（只有「不玩了」接点击） ───── */
+.pet-arena { position: absolute; left: 0; bottom: 0; width: 340px; height: 420px; z-index: 3; pointer-events: none; }
+.pet-arena__cv { position: absolute; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
+.pet-arena__hud {
+  position: absolute; top: 8px; left: 10px; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-variant-numeric: tabular-nums;
+  background: var(--pet-her-bg); border: 1px solid var(--pet-line); color: var(--pet-text-2);
+}
+.pet-arena__tip { position: absolute; top: 36px; left: 12px; margin: 0; font-size: 11px; color: var(--pet-text-2); text-shadow: 0 0 4px var(--pet-her-bg), 0 0 8px var(--pet-her-bg); }
+.pet-arena__stop {
+  position: absolute; top: 6px; right: 8px; padding: 2px 11px; border-radius: 12px; font-size: 12px; pointer-events: auto; cursor: pointer;
+  background: var(--pet-her-bg); border: 1px solid var(--pet-line-strong); color: var(--pet-text-2);
+}
+.pet-arena__stop:hover { color: var(--pet-text); background: var(--pet-panel); }
+
+@keyframes pet-ear { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+@keyframes pet-pop { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes pet-caret { to { visibility: hidden; } }
+@keyframes pet-glow { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-bubble, .pet-chat, .pet-game, .pet-tool, .pet-badge--ear { animation: none; }
+  .pet-bubble[data-streaming] .pet-bubble__text::after, .pet-msg[data-streaming] .pet-msg__text::after, .pet-letter[data-streaming] .pet-letter__body::after { animation: none; }
+  .pet-dots > i, .pet-chat__state[data-doing]::before { animation: none; opacity: 0.8; }
+  .pet-chat__composer, .pet-chat__send, .pet-card, .pet-card__in { transition: none; }
+  .pet-card:not(:disabled):hover { transform: none; }
+}
+:root[data-reduced] .pet-bubble, :root[data-reduced] .pet-chat, :root[data-reduced] .pet-game, :root[data-reduced] .pet-tool, :root[data-reduced] .pet-badge--ear { animation: none; }
+:root[data-reduced] .pet-bubble[data-streaming] .pet-bubble__text::after, :root[data-reduced] .pet-msg[data-streaming] .pet-msg__text::after,
+:root[data-reduced] .pet-letter[data-streaming] .pet-letter__body::after { animation: none; }
+:root[data-reduced] .pet-dots > i, :root[data-reduced] .pet-chat__state[data-doing]::before { animation: none; opacity: 0.8; }
+:root[data-reduced] .pet-chat__composer, :root[data-reduced] .pet-chat__send, :root[data-reduced] .pet-card, :root[data-reduced] .pet-card__in { transition: none; }
+:root[data-reduced] .pet-card:not(:disabled):hover { transform: none; }
+
+/* 读不出声时的一句说明（密钥无效、音色被拒……）：不挡点击，8 秒后收起 */
+.pet-voice-note {
+  position: absolute; left: 8px; right: 8px; bottom: 372px; margin: 0; z-index: 3;
+  padding: 4px 10px; border-radius: 10px; font-size: 12px; line-height: 1.5;
+  background: var(--pet-note-bg, rgba(20, 16, 34, 0.86)); color: var(--pet-note-fg, #f1e9f6);
+  pointer-events: none;
+}
+html[data-theme='day'] .pet-voice-note { --pet-note-bg: rgba(255, 254, 251, 0.94); --pet-note-fg: #3a2b52; box-shadow: 0 2px 10px rgba(60, 40, 90, 0.16); }

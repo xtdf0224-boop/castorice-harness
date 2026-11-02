@@ -1,0 +1,41 @@
+{
+ "data": [
+  {
+   "id": "claude-haiku-5-5",
+   "display_name": "Claude Haiku 5.5",
+   "max_input_tokens": 1000000,
+   "max_tokens": 128000,
+   "capabilities": {
+    "image_input": {
+     "supported": false
+    },
+    "effort": {
+     "supported": true,
+     "low": {
+      "supported": true
+     },
+     "high": {
+      "supported": true
+     }
+    },
+    "thinking": {
+     "supported": true,
+     "types": {
+      "disabled": {
+       "supported": true
+      }
+     }
+    }
+   }
+  },
+  {
+   "id": "claude-old-3",
+   "display_name": "Claude Old 3",
+   "lifecycle": "deprecated",
+   "retires_at": "2026-11-30"
+  }
+ ],
+ "has_more": false,
+ "first_id": "claude-haiku-5-5",
+ "last_id": "claude-old-3"
+}

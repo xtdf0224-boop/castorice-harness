@@ -1,0 +1,563 @@
+/* 她的话层（AGENT-VOICE-PLAN §3.1、§4.2、§4.4、§4.7；C1 独占）。类名前缀：.hface / .hnp / .hbadge / .hsticker / .hmark / .hai（共用组件）、
+   .her-（对话里她的话）、.sysl（系统行）、.pill、.story-（剧情框）。不给别人的类名写样式；颜色一律走语义令牌（tokens.css 的 --her-* / --me-* / --ring-*）。
+   动画规矩（§7.2）：html[data-window-hidden] 下 paused，data-motion="reduced" 下关闭；退后只做 opacity 过渡，不改任何尺寸. */
+
+/* ───────────── 头像 .hface ───────────── */
+.hface {
+  --hface-ground: var(--surface-strong, #1b1630);
+  position: relative;
+  display: inline-block;
+  flex: none;
+  text-shadow: none;
+}
+/* 圆角方形裁切（D4）：半径 ≈20%，里面的图按行内样式放大平移，不切冠尖. 外环 = 运行状态（D2），颜色只来自 --ring-*. */
+.hface__clip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 20%;
+  background: #d6d5e0;
+  box-shadow: 0 0 0 2px var(--ring-idle), 0 4px 10px rgb(10 6 24 / 0.3);
+  transition: opacity 120ms ease;
+}
+.hface__clip[data-ring="work"] { box-shadow: 0 0 0 2px var(--ring-work), 0 4px 10px rgb(10 6 24 / 0.3); }
+.hface__clip[data-ring="wait"] { box-shadow: 0 0 0 2px var(--ring-wait), 0 4px 10px rgb(10 6 24 / 0.3); }
+.hface__clip[data-ring="none"] { box-shadow: 0 4px 10px rgb(10 6 24 / 0.3); }
+.hface__badge {
+  position: absolute;
+  overflow: hidden; /* 圆形容器：裁掉官方图标四周的透明留白（ExprBadge crop） */
+  border-radius: 50%;
+  line-height: 0;
+  box-shadow: 0 0 0 1.5px var(--hface-ground), 0 2px 5px rgb(10 6 24 / 0.4);
+  transition: opacity 120ms ease;
+}
+/* full：整张立绘，不裁；这里没有任何 overflow:hidden（D-03）. */
+.hface--full { line-height: 0; }
+.hface__full { border-radius: 14px; }
+.hface__badge--in { right: 8px; bottom: 8px; }
+@keyframes her-face-in { from { opacity: 0; } to { opacity: 1; } }
+.hface__img[data-swap], .hface__full[data-swap] { animation: her-face-in 150ms ease-out both; }
+
+.hbadge {
+  display: block;
+  border-radius: 50%;
+  object-fit: cover;
+  /* 官方图标是透明底，垫界面自己的深紫圆盘（不是她的形象，不改图） */
+  background: linear-gradient(145deg, #6b4690, #47295f);
+}
+.hsticker { display: block; flex: none; filter: drop-shadow(0 3px 5px rgb(10 6 24 / 0.28)); }
+
+/* ───────────── 命途图标 .hmark ───────────── */
+.hmark {
+  --hmark-tint: brightness(1.7);
+  display: block;
+  flex: none;
+  filter: var(--hmark-tint);
+}
+/* 小图夜里的「不着色」不能写 none：busy 的 `filter: var(--hmark-tint) drop-shadow(…)` 代入后成了 `none drop-shadow(…)`，是非法滤镜列表，整条声明作废、光晕丢失. brightness(1) 等价于不变，且恒可与别的滤镜连写. */
+.hmark[data-small] { --hmark-tint: brightness(1); }
+:root[data-mode="day"] .hmark { --hmark-tint: brightness(0.5); }
+:root[data-mode="day"] .hmark[data-small] { --hmark-tint: invert(1) brightness(0.42); }
+.hmark[data-state="idle"] { opacity: 0.75; }
+.hmark[data-state="off"] { opacity: 0.4; }
+.hmark[data-state="busy"] { filter: var(--hmark-tint) drop-shadow(0 0 4px var(--ring-work)); }
+
+/* ───────────── 名牌 .hnp（样稿 C 的 .np） ───────────── */
+.hnp { --np-h: 26px; --np-fs: 14px; display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; text-shadow: none; }
+.hnp--sm { --np-h: 22px; --np-fs: 12.5px; }
+.hnp--md { --np-h: 26px; --np-fs: 14px; }
+.hnp--lg { --np-h: 34px; --np-fs: 18px; }
+.hnp__tag { display: inline-flex; align-items: center; flex: none; filter: drop-shadow(0 1px 2px rgb(20 10 40 / 0.3)); }
+.hnp__cap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: calc(var(--np-h) * 1.27);
+  height: var(--np-h);
+  margin-right: -3px;
+  border-radius: calc(var(--np-h) / 2) 4px 4px calc(var(--np-h) / 2);
+  background: linear-gradient(135deg, #5b3a7b, #47295f);
+  color: #f1e8f7;
+}
+.hnp__plate {
+  display: inline-flex;
+  align-items: center;
+  height: var(--np-h);
+  padding: 0 8px 0 14px;
+  border-radius: 4px calc(var(--np-h) / 2) calc(var(--np-h) / 2) 4px;
+  background: #fffefb;
+  box-shadow: inset 0 0 0 1.2px #cdbfe6, inset 0 0 0 3px #fffefb, inset 0 0 0 3.8px #e1d8f1;
+  font: 700 var(--np-fs) / var(--np-h) var(--font-serif);
+  letter-spacing: 0.2em;
+  color: #2e2142;
+  white-space: nowrap;
+}
+.hnp__sub { font-family: var(--font-serif); font-size: 12.5px; letter-spacing: 0.06em; color: var(--text-2); white-space: nowrap; }
+.hnp__word {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 11px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  line-height: 22px;
+  color: var(--text-2);
+  background: rgb(var(--accent-rgb) / 0.13);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.34);
+  white-space: nowrap;
+}
+/* 表情胶囊：官方 136² 小图标（圆盘里 125% 裁掉透明留白）+ 中文表情名；与神色词胶囊同一套描边 */
+.hnp__expr {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 11px 0 2px;
+  border-radius: 11px;
+  font-size: 12.5px;
+  line-height: 22px;
+  color: var(--text-2);
+  background: rgb(var(--accent-rgb) / 0.13);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.34);
+  white-space: nowrap;
+}
+.hnp__eicon { position: relative; display: block; flex: none; width: 18px; height: 18px; overflow: hidden; border-radius: 50%; background: linear-gradient(145deg, #6b4690, #47295f); }
+.hnp__eicon img { position: absolute; left: 50%; top: 50%; display: block; width: 125%; height: 125%; max-width: none; transform: translate(-50%, -50%); }
+.hnp--lg .hnp__expr { height: 28px; padding-right: 13px; border-radius: 14px; font-size: 13.5px; line-height: 28px; }
+.hnp--lg .hnp__eicon { width: 22px; height: 22px; }
+.hnp__dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+.hnp__dot--work { background: var(--ring-work); }
+.hnp__dot--wait { background: var(--ring-wait); }
+
+.hai {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 9px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+/* ───────────── 对话里她的话 .her-msg ───────────── */
+.her-msg {
+  --her-av: 40px;
+  display: grid;
+  grid-template-columns: var(--her-av) minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  align-self: flex-start;
+  width: 100%;
+  max-width: min(780px, 100%);
+}
+.her-msg.is-flat { --her-av: 56px; }
+.her-msg__av { display: flex; justify-content: center; align-items: flex-start; padding-top: 2px; min-height: 1px; }
+.her-msg .ws-msg__col { position: relative; gap: 0; }
+.her-msg__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-height: 26px; margin-bottom: 4px; }
+.her-msg__head .ws-msg__time { margin-left: auto; }
+.her-msg__hover { position: absolute; top: 4px; right: 0; opacity: 0; transition: opacity 120ms ease; }
+.her-msg:hover .her-msg__hover, .her-msg:focus-within .her-msg__hover { opacity: 1; }
+.her-bubs { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.ws-msg.her-msg .ws-msg__bubble.her-bub {
+  position: relative;
+  max-width: 600px;
+  padding: 7px 14px 8px;
+  border: 0;
+  border-radius: 5px 15px 15px 15px;
+  background: var(--her-bg);
+  box-shadow: inset 0 0 0 1px var(--her-line);
+  color: var(--text);
+  font-size: 14.5px;
+  line-height: 23px;
+  text-shadow: none;
+  text-wrap: pretty;
+}
+:root:not([data-mode="day"]) .ws-msg.her-msg .ws-msg__bubble.her-bub { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+:root[data-mode="day"] .ws-msg.her-msg .ws-msg__bubble.her-bub { box-shadow: inset 0 0 0 1px var(--her-line), 0 1px 3px rgb(70 45 110 / 0.06); }
+.ws-msg.her-msg .ws-msg__bubble.her-bub.is-first::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 11px;
+  border: 6px solid transparent;
+  border-left: 0;
+  border-right-color: var(--her-line);
+}
+.ws-msg.her-msg .ws-msg__bubble.her-bub .ws-msg__md { font-size: 14.5px; }
+.her-bub .ws-msg__md p, .her-lead__text { text-wrap: pretty; }
+.her-sticker { margin: 4px 0 0 2px; }
+/* 危机回复里的热线号码（Conversation 加了粗体标记）：600，一眼找到 */
+.her-bub strong { font-weight: 600; }
+
+/* 退半步：只做 opacity 过渡并保留占位（不改行高）；贴纸停用 = 看不见、点不到，占位还在.
+   第 2 轮评审：只退最新那一条（opacity .6、不去饱和），历史头像与所有角标保持原样，免得看着像图没加载出来. */
+.ws-conv .her-sticker { transition: opacity 120ms ease; }
+.ws-conv[data-retreat="true"] .her-msg[data-latest="true"] .hface__clip { opacity: 0.6; }
+.ws-conv[data-retreat="true"] .her-sticker { opacity: 0; pointer-events: none; }
+
+/* 折叠她的话（task.foldHer）：一行摘要，点开展开 */
+.her-msg--fold { display: block; max-width: 640px; }
+.her-fold {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 4px 10px 4px 6px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--her-bg);
+  box-shadow: inset 0 0 0 1px var(--her-line);
+  color: var(--text-2);
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.her-fold:hover { color: var(--text); }
+.her-fold__line { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.her-fold__more { display: inline-flex; align-items: center; gap: 2px; flex: none; font-size: 12px; color: var(--text-3); }
+
+/* 卡外她那一句（第 1 轮评审，对齐样稿 C s3/s5）：40 px 头像（16 px 角标外移 3px）+ 名牌 sm + 神色词 + 气泡.
+   退半步（.is-quiet）只作用在头像图上，角标、名牌、句子保持不透明. */
+.her-leadrow { align-self: flex-start; width: 100%; max-width: min(780px, 100%); }
+.her-lead { display: flex; align-items: flex-start; gap: 12px; margin: 2px 0; min-width: 0; max-width: min(780px, 100%); }
+.her-lead > .hface { margin-top: 1px; }
+.her-lead__col { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.her-lead__text {
+  position: relative;
+  margin: 0;
+  max-width: 600px;
+  padding: 8px 12px;
+  border-radius: 5px 15px 15px 15px;
+  background: var(--her-bg);
+  box-shadow: inset 0 0 0 1px var(--her-line);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  text-shadow: none;
+  text-wrap: pretty;
+}
+:root:not([data-mode="day"]) .her-lead__text { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+:root[data-mode="day"] .her-lead__text { box-shadow: inset 0 0 0 1px var(--her-line), 0 1px 3px rgb(70 45 110 / 0.06); }
+.her-lead__text::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 10px;
+  border: 6px solid transparent;
+  border-left: 0;
+  border-right-color: var(--her-line);
+}
+.her-lead--plain { display: block; font-size: 13.5px; line-height: 22px; color: var(--text-2); margin: 2px 0; }
+.her-lead.is-quiet .hface__img { opacity: 0.6; }
+
+/* 新闲聊的空态：她先开口 */
+.her-opening { margin-top: 6px; }
+
+/* 子 Agent 的话：命途图标 + 名字（内容层语气），占 32 px 一列 */
+.her-msg__mark { display: flex; justify-content: center; align-items: flex-start; padding-top: 2px; min-width: 32px; }
+.ws-msg--agent .ws-msg__col { position: relative; }
+.ws-msg--agent .her-msg__hover { position: absolute; top: 2px; right: 0; opacity: 0; transition: opacity 120ms ease; }
+.ws-msg--agent:hover .her-msg__hover { opacity: 1; }
+
+/* 报错卡本体（内容层）：只放失败事实，无头像、无贴纸 */
+.her-errcard {
+  align-self: flex-start;
+  width: 100%;
+  max-width: min(780px, 100%);
+  padding: 8px 12px 10px;
+  border: 1px dashed rgb(var(--danger-rgb) / 0.55);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  background: linear-gradient(90deg, var(--tone-danger-soft), transparent 70%), var(--surface-strong);
+}
+.her-errcard .ws-msg__head { min-height: 22px; margin-bottom: 4px; }
+.her-errcard .ws-msg__head .ws-msg__time { margin-left: auto; }
+.her-errcard__body { font-size: 14px; line-height: 1.7; color: var(--text); overflow-wrap: anywhere; }
+
+/* ───────────── 用户的话 ───────────── */
+.ws-conv .her-me { max-width: min(520px, 88%); }
+.her-me__row { display: flex; align-items: flex-end; gap: 8px; max-width: 100%; }
+.her-me__row .ws-msg__time { padding-bottom: 6px; flex: none; }
+.ws-conv .ws-msg--user.her-me .ws-msg__bubble.her-me__bub {
+  min-width: 0;
+  padding: 7px 14px 8px;
+  border: 0;
+  border-radius: 15px 15px 5px 15px;
+  background: var(--me-bg);
+  color: var(--me-fg);
+  box-shadow: none;
+  font-size: 14.5px;
+  line-height: 23px;
+  text-shadow: none;
+}
+/* 落蝶：轻反应，不调模型；一次性落下 600 ms */
+.her-landing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 4px 0 6px;
+  border-radius: 11px;
+  font-size: 12px;
+  color: var(--text-2);
+  background: rgb(var(--blue-rgb) / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(var(--blue-rgb) / 0.3);
+  animation: her-land 600ms ease-out both;
+}
+.her-landing__mark { display: inline-flex; color: var(--blue); }
+.her-landing .her-act { height: 20px; padding: 0 8px; font-size: 11.5px; }
+@keyframes her-land { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+/* ───────────── 操作 ───────────── */
+.ws-msg__actions.her-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-top: 2px; opacity: 1; }
+.her-actions--me { justify-content: flex-end; }
+/* 第 1 轮评审：她的话下面不常驻一排工具（样稿 C 没有）——悬停 / 键盘聚焦才现，键盘可达不变；
+   最后一条常驻，但只留「换个说法」；状态字（「记下了」…）与记事表单一直可见. */
+.ws-msg__actions.her-actions > :not(.her-act__status):not(.her-mem) { opacity: 0; transition: opacity 150ms ease; }
+.ws-msg:hover .ws-msg__actions.her-actions > *,
+.ws-msg:focus-within .ws-msg__actions.her-actions > *,
+.ws-msg__actions.her-actions:focus-within > *,
+.ws-msg__actions.her-actions.is-resident > .her-act--rw { opacity: 1; }
+:root[data-motion="reduced"] .ws-msg__actions.her-actions > * { transition: none !important; }
+/* 「换个说法」从气泡左缘起排（第 2 轮评审：复制 / 重新生成两个图标隐藏时，它不再悬在离气泡左缘约 70px 的地方）；复制类图标排在它后面，悬停才现. */
+.ws-msg__actions.her-actions > .her-act--rw { order: -1; }
+/* 连发合并（第 2 轮评审）：同一说话人连发的几条，上一条行间距 6px（§4.4），它的操作行不占行高，悬停 / 聚焦时才浮在气泡右下角. */
+.cv-row:has(> .her-msg.is-joined) { padding-bottom: 6px; }
+.her-msg.is-joined .ws-msg__actions.her-actions {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 1px 3px;
+  border-radius: 14px;
+  pointer-events: none;
+}
+.her-msg.is-joined:hover .ws-msg__actions.her-actions,
+.her-msg.is-joined .ws-msg__actions.her-actions:focus-within {
+  pointer-events: auto;
+  background: var(--solid-raised, var(--solid));
+  box-shadow: inset 0 0 0 1px var(--her-line), 0 4px 10px rgb(10 6 24 / 0.3);
+}
+.her-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 13px;
+  background: none;
+  color: var(--text-3);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.her-act:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.her-act:disabled { opacity: 0.5; cursor: default; }
+.her-act--fill { background: var(--accent-fill); color: var(--bg-0); font-weight: 600; }
+.her-act--fill:hover:not(:disabled) { background: var(--accent); color: var(--bg-0); }
+.her-act__status { font-size: 12px; color: var(--text-3); padding: 0 6px; }
+.her-mem { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; width: 100%; margin-top: 4px; }
+.her-mem__input { flex: 1 1 220px; min-width: 0; }
+.her-mem__scope { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-2); }
+.her-mem__count { font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.her-mem__count.is-over, .her-mem__err { color: var(--danger); }
+.her-mem__err { font-size: 12px; }
+
+/* ───────────── 系统行 .sysl（系统行在前，她的话在后） ───────────── */
+.sysl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0 8px;
+  font-size: 12.5px;
+  line-height: 18px;
+  color: var(--text-3);
+  letter-spacing: 0.02em;
+}
+.sysl::before, .sysl::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--line-2)); }
+.sysl::after { background: linear-gradient(90deg, var(--line-2), transparent); }
+.sysl b { color: var(--text-2); font-weight: 500; }
+.sysl__act {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  cursor: pointer;
+}
+.sysl__act:disabled { color: var(--text-3); text-decoration: none; cursor: default; }
+
+/* ───────────── 选项胶囊 .pill（退出放最后） ───────────── */
+.her-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+/* 第 3 轮：37 px 高，左边 22 px 圆形图标位（普通项对话气泡、退出项门），padding 0 16px 0 8px */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 37px;
+  padding: 0 16px 0 8px;
+  border: 1px solid var(--line-2);
+  border-radius: 19px;
+  background: var(--surface-raised);
+  color: var(--text);
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.pill:hover { border-color: var(--accent); }
+.pill__icon { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(135deg, #68328c, #402a51); color: #f6f1fa; }
+.pill--exit { border-style: dashed; background: transparent; color: var(--text-3); }
+.pill--exit .pill__icon { background: rgb(120 110 150 / 0.6); }
+.pill--exit:hover { color: var(--text); }
+/* 昼：白底上虚线要看得见，和普通胶囊分得开 */
+:root[data-mode="day"] .pill--exit { border: 1px dashed #b4a8cc; color: var(--text-2); }
+:root[data-mode="day"] .pill--exit:hover { border-color: var(--accent); color: var(--text); }
+:root[data-mode="day"] .pill:not(.pill--exit) { background: var(--surface-strong); color: var(--accent-strong, var(--text)); }
+
+/* ───────────── 剧情框 .story-box（设置项，默认关；第 3 轮：游戏对话框，不是加宽的气泡） ─────────────
+   名牌 lg 骑在上边线上；双层边 + 上沿加粗 + 左侧小尖；夜 / 昼各一套底色. */
+.story-dock { flex: none; padding: 34px 16px 18px; box-sizing: border-box; }
+.ws-conv--chat .story-dock { width: 100%; max-width: 872px; margin-inline: auto; }
+.story-box {
+  position: relative;
+  padding: 36px 28px 40px 28px;
+  border: 1px solid rgb(214 190 226 / 0.42);
+  border-top: 2px solid rgb(214 190 226 / 0.6);
+  border-radius: 8px 20px 20px 20px;
+  background: linear-gradient(180deg, rgb(40 30 70 / 0.88), rgb(24 18 44 / 0.92));
+  box-shadow: inset 0 0 0 3px rgb(14 11 30 / 0.5), inset 0 0 0 4px rgb(214 190 226 / 0.12), 0 12px 32px rgb(0 0 0 / 0.3), 0 0 0 1px rgb(214 190 226 / 0.1);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: her-story-in 200ms ease-out both;
+  text-shadow: none;
+}
+/* 左侧小尖：这句是她说的（样稿 B .dlg::before） */
+.story-box::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 40px;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-right: 14px solid rgb(214 190 226 / 0.55);
+}
+:root[data-mode="day"] .story-box {
+  border: 1px solid #d9cdea;
+  border-top: 2px solid #b9a6d6;
+  background: linear-gradient(#fffefb, #f6f0fb);
+  /* 第 4 轮：昼间不再用错位硬投影（像第二张卡叠在后面），改柔和投影 */
+  box-shadow: inset 0 0 0 3px rgb(246 240 251 / 0.9), inset 0 0 0 4px rgb(185 166 214 / 0.35), 0 10px 24px rgb(90 55 130 / 0.18);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-mode="day"] .story-box::before { border-right-color: #d9cdea; }
+@keyframes her-story-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.her-msg.is-settle { animation: her-story-in 200ms ease-out both; }
+/* 第 4 轮：上边线只从名牌（实底）后面穿过去. 副标与表情胶囊整体落在边线下方（框内第一行，y 6–28），不再被线横穿成「删除线」；
+   .hnp 在这里 display:contents，名牌的 tag / 副标 / 胶囊成为这一行的直接子项. 胶囊改不透明底. */
+.story-box__name { position: absolute; left: 22px; top: -18px; display: flex; align-items: flex-start; flex-wrap: nowrap; gap: 10px; max-width: calc(100% - 44px); }
+.story-box__name .hnp { display: contents; }
+.story-box__name .hnp__sub,
+.story-box__name .hnp__expr,
+.story-box__name .hnp__word { margin-top: 24px; height: 22px; line-height: 22px; }
+.story-box__name .hnp__sub { display: inline-flex; align-items: center; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.story-box__name .hnp--lg .hnp__expr { height: 22px; padding-right: 11px; border-radius: 11px; font-size: 12.5px; line-height: 22px; color: var(--text-2); background: #3b2d60; box-shadow: inset 0 0 0 1px rgb(214 190 226 / 0.4); }
+.story-box__name .hnp--lg .hnp__eicon { width: 18px; height: 18px; }
+.story-box__name .hnp__word { background: #3b2d60; box-shadow: inset 0 0 0 1px rgb(214 190 226 / 0.4); }
+:root[data-mode="day"] .story-box__name .hnp--lg .hnp__expr,
+:root[data-mode="day"] .story-box__name .hnp__word { background: #f1e9fa; box-shadow: inset 0 0 0 1px #cfc0e6; }
+.story-box__text { font: 500 15.5px / 29px var(--font-serif); color: var(--text); letter-spacing: 0.01em; text-wrap: pretty; }
+.story-box__text .ws-msg__md { font: inherit; }
+.story-box.has-sticker .story-box__text { padding-right: 112px; }
+.story-box__sticker { position: absolute; right: 24px; bottom: 12px; }
+.story-box__foot { position: absolute; left: 28px; right: 26px; bottom: 10px; display: flex; align-items: center; justify-content: space-between; font-size: 12px; line-height: 16px; color: var(--text-3); }
+.story-box.has-sticker .story-box__foot { right: 140px; }
+.story-box__fold { padding: 0; border: 0; background: none; color: var(--text-3); font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.story-box__fold:hover { color: var(--text); }
+.story-box__go { color: var(--accent); animation: her-story-go 1.2s ease-in-out 8; }
+@keyframes her-story-go { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+/* 吸顶名牌（第 8 轮重做；Conversation 的 headAt）：.ws-conv__stage 顶部一条不透明实底条（--solid：夜昼各自的面板实色，不用半透明玻璃），
+   高 48（40 头像 + 内边距），内容从它底下自然滑过去、被下沿干净地切开——下沿是 1px 线 + 很淡的一道投影，下面没有渐隐带.
+   不进文档流、不改滚动锚点；aria-hidden（真正的组头在流里）；滚轮转给滚动区（onWheel）. 右边让出滚动条（--her-sb 由 Conversation 量出）.
+   头像上沿对齐真头像（top 0 + 内边距 2），接手时不跳. 闲聊页的列是 840 居中，名牌跟着居中；闲聊页的面板顶有圆角，条跟着圆. 出现 / 退场直接切换，没有过渡. */
+.her-stickhead {
+  /* 向上多出 2px 盖住滚动区的裁切线（否则亚像素取整时条上方会漏出一排上一行字的下沿） */
+  position: absolute; z-index: 4; top: -2px; left: 0; right: var(--her-sb, 0px); height: 50px;
+  display: flex; box-sizing: border-box;
+  padding: 2px var(--sp-4) 0 calc(var(--sp-4) - 4px);
+  background: var(--solid);
+  box-shadow: 0 1px 0 var(--line-2), 0 3px 8px -5px rgb(var(--shadow-rgb) / 0.3);
+}
+.ws-conv--chat .her-stickhead { padding-left: var(--sp-4); justify-content: center; border-radius: calc(var(--panel-radius, 16px) - 1px) calc(var(--panel-radius, 16px) - 1px) 0 0; }
+.her-stickhead__col { display: flex; width: 100%; min-width: 0; }
+.ws-conv--chat .her-stickhead__col { max-width: 840px; padding-left: 4px; box-sizing: border-box; }
+/* 吸顶时流里那一组的真头像让位（Conversation 的 syncHead 打 data-stuck），名牌条下沿不再漏出第二个头像的下巴与角标 */
+.cv-row[data-stuck] .her-msg__av { visibility: hidden; }
+.her-stickhead__in {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 10px;
+  max-width: min(780px, 100%);
+  padding: 2px 14px 2px 4px;
+  border-radius: 26px;
+  background: var(--her-bg);
+  box-shadow: inset 0 0 0 1px var(--her-line), 0 2px 10px rgb(20 10 40 / 0.18);
+}
+
+/* 末行保护（Tail.tsx）：末尾几个字不拆行，末行不会只剩「决定。」 */
+.her-tail { white-space: nowrap; }
+
+/* 闲聊页头 */
+.chat-ws__face { display: inline-flex; flex: none; }
+.chat-ws__status .hnp { vertical-align: middle; }
+
+/* ───────────── 动画规矩：窗口隐藏时暂停、减少动态时关闭 ───────────── */
+html[data-window-hidden] .hface__img,
+html[data-window-hidden] .hface__full,
+html[data-window-hidden] .her-landing,
+html[data-window-hidden] .her-msg.is-settle,
+html[data-window-hidden] .story-box,
+html[data-window-hidden] .story-box__go,
+html[data-window-covered] .hface__img,
+html[data-window-covered] .hface__full,
+html[data-window-covered] .her-landing,
+html[data-window-covered] .her-msg.is-settle,
+html[data-window-covered] .story-box,
+html[data-window-covered] .story-box__go { animation-play-state: paused !important; }
+:root[data-motion="reduced"] .hface__img,
+:root[data-motion="reduced"] .hface__full,
+:root[data-motion="reduced"] .her-landing,
+:root[data-motion="reduced"] .her-msg.is-settle,
+:root[data-motion="reduced"] .story-box,
+:root[data-motion="reduced"] .story-box__go { animation: none !important; }
+:root[data-motion="reduced"] .ws-conv .her-msg,
+:root[data-motion="reduced"] .ws-conv .her-bub,
+:root[data-motion="reduced"] .ws-conv .ws-msg--user.her-me,
+:root[data-motion="reduced"] .hface__clip,
+:root[data-motion="reduced"] .hface__badge,
+:root[data-motion="reduced"] .her-sticker,
+:root[data-motion="reduced"] .her-msg__hover { transition: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="full"]) .ws-conv .her-msg,
+  :root:not([data-motion="full"]) .ws-conv .her-bub,
+  :root:not([data-motion="full"]) .ws-conv .ws-msg--user.her-me { transition: none !important; }
+  :root:not([data-motion="full"]) .hface__img,
+  :root:not([data-motion="full"]) .hface__full,
+  :root:not([data-motion="full"]) .her-landing,
+  :root:not([data-motion="full"]) .her-msg.is-settle,
+  :root:not([data-motion="full"]) .story-box,
+  :root:not([data-motion="full"]) .story-box__go { animation: none !important; }
+}

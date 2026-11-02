@@ -1,0 +1,514 @@
+/* 栖枝 · agents-tarot.css
+   Agent 页的塔罗牌桌（施工图 §4.3，样稿 A 的牌 + C 的此刻同行 / 队伍行迹 / 汇总卡 / 小柱）。类名一律 .tarot- 开头，不给别人的类名写样式.
+   版面按主栏容器宽算（集成者裁决，覆盖施工图原写的「<820 变 2×2」）：容器（.tarot，container-type:inline-size）≥640 时四张牌一排、遐蝶主牌居中放大
+   （1280 窗口的主栏约 740 px、960 窗口约 690 px 都是一排）；<640 才变 2×2（小牌 236 px 宽，档位一行放得下）；一排里小牌最窄约 135 px，
+   此时用卡片容器查询（tcard）收紧牌面内边距与档位间距，牌名 / 命途 / 档位 / 缎带仍不截断不折行. 此刻同行与队伍行迹并排、牌背两列的门槛仍是 660.
+   牌面字号地板 12.5 px，不用 ellipsis；动画只有翻牌一下（base.css 的 reduced / window-hidden 规则管着）.
+   颜色一律来自令牌（tokens.css 的 --card-* / --ring-* / --silver / --tier-*）；本文件里只有牌面的几个局部变量（徽记着色、牌框装饰色）. */
+
+.tarot {
+  container: tarot / inline-size;
+  --orn: #9a74ad;
+  --orn2: #e6dcf1;
+  --moon-a: #f3ecfb;
+  --moon-b: #b9a0dc;
+  --moon-c: #5d3c8e;
+  --card-solid: #241b44;
+  --face-ink: var(--text);
+  --face-ink-2: var(--text-2);
+  --face-ink-3: var(--text-3);
+  --face-line: rgb(var(--hair-rgb) / 0.28);
+  --seal-gold: var(--gold);
+  --card-shadow: 0 18px 38px rgb(4 2 14 / 0.5), 0 3px 8px rgb(4 2 14 / 0.35);
+  --herbub: var(--her-bg);
+}
+:root[data-mode="day"] .tarot {
+  --orn: #68328c;
+  --orn2: #8f7bb0;
+  --moon-a: #fbf8ff;
+  --moon-b: #d9cbef;
+  --moon-c: #a78bd0;
+  --card-solid: #f5efe3;
+  /* 昼的牌要压得住桌面：投影加深一档（桌面底色也比 r2 深，见下） */
+  --card-shadow: 0 14px 28px rgb(60 32 100 / 0.32), 0 3px 6px rgb(60 32 100 / 0.2);
+}
+.tarot-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* 字形光晕（壁纸开时 .app 上的 --text-halo）只留给直接坐在壁纸上的页头标题；牌、牌背、同行、行迹、气泡自带底，不要光晕 */
+.tarot :is(.tarot-face, .tarot-back, .tarot-crew, .tarot-trail, .tarot-bubble, .tarot-card) { text-shadow: none; }
+
+/* ───────────── 页头：标题 + 她的一句 ───────────── */
+.tarot-head { align-items: center; justify-content: flex-start; gap: var(--sp-2) var(--sp-6); padding: var(--sp-3) var(--sp-5) var(--sp-3); }
+.tarot-head__title { flex: none; }
+.tarot-head__her { flex: 1 1 340px; min-width: 0; display: flex; align-items: center; gap: var(--sp-3); }
+.tarot-head__mark { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line-2); }
+.tarot-head__mark img { filter: url(#tarot-plum); }
+:root[data-mode="night"] .tarot-head__mark img, :root:not([data-mode]) .tarot-head__mark img { filter: none; }
+.tarot-head__say { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.tarot-bubbles { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.tarot-bubble {
+  position: relative;
+  max-width: 600px;
+  padding: 4px 14px 5px;
+  background: var(--herbub);
+  box-shadow: inset 0 0 0 1px var(--her-line);
+  border-radius: 5px 14px 14px 14px;
+  font: 400 14px/22px var(--font-serif);
+  color: var(--text);
+  text-wrap: pretty;
+}
+
+/* ───────────── 此刻同行 + 队伍行迹 ───────────── */
+.tarot-now { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap-shell); }
+@container tarot (min-width: 660px) {
+  .tarot-now { grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); }
+}
+.tarot-crew, .tarot-trail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 10px 14px 11px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  corner-shape: var(--corner);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(var(--blur)) saturate(1.12);
+}
+.tarot-crew__head, .tarot-trail__head { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 12px; min-height: 26px; }
+.tarot-crew__task, .tarot-trail__task { font-size: 13px; line-height: 18px; color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
+.tarot-crew__task b { color: var(--text); font-weight: 600; }
+.tarot-banner {
+  display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 16px 0 10px;
+  font: 600 13px/1 var(--font-sans); letter-spacing: 0.06em; color: #f6f3fa;
+  background: linear-gradient(90deg, #4b2670, #68328c 60%, #7c4ca3);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%);
+}
+.tarot-trail__title { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; color: var(--text); }
+.tarot-trail__title svg { color: var(--accent); }
+
+.tarot-nodes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.tarot-node { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; text-align: center; }
+.tarot-node__av {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--surface-raised); box-shadow: inset 0 0 0 1.5px var(--line-2);
+}
+.tarot-node[data-agent="orchestrator"] .tarot-node__av { border-radius: 22%; }
+.tarot-node__av img[data-agent-mark] { filter: url(#tarot-plum); }
+:root[data-mode="night"] .tarot-node__av img[data-agent-mark], :root:not([data-mode]) .tarot-node__av img[data-agent-mark] { filter: none; }
+.tarot-node__av.is-work { box-shadow: 0 0 0 2px var(--ring-work), 0 0 14px -2px rgb(var(--blue-rgb) / 0.55); }
+.tarot-node__av.is-wait { box-shadow: 0 0 0 2px var(--ring-wait), 0 0 14px -2px rgb(var(--gold-rgb) / 0.5); }
+.tarot-node.is-done .tarot-node__av::after {
+  content: "✓"; position: absolute; right: -4px; top: -5px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--tone-success); color: #10200a; font: 700 11px/1 var(--font-sans); box-shadow: 0 0 0 1.5px var(--solid);
+}
+.tarot-node.is-off .tarot-node__av { opacity: 0.55; filter: grayscale(1); }
+.tarot-node__txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; max-width: 100%; }
+.tarot-node__txt b { font: 600 14px/20px var(--font-sans); letter-spacing: 0.06em; color: var(--text); }
+.tarot-node__txt small { font-size: 12.5px; line-height: 18px; color: var(--text-3); overflow-wrap: anywhere; }
+.tarot-node.is-busy .tarot-node__txt small { color: var(--blue); font-weight: 600; }
+.tarot-node.is-off .tarot-node__txt b { color: var(--text-3); }
+.tarot-crew__say { display: flex; align-items: flex-start; gap: 10px; padding-top: 8px; border-top: 1px solid var(--line); }
+.tarot-crew__say .tarot-bubble { flex: 1; min-width: 0; font-size: 14px; }
+/* 页头已说了她那一句时，同行底部只写一行行迹摘要（事实，不是她的话：没有头像、没有气泡底） */
+.tarot-crew__sum { margin: 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 20px; color: var(--text-2); overflow-wrap: anywhere; }
+
+.tarot-trail__rows { display: flex; flex-direction: column; margin: 0; padding: 0; list-style: none; }
+.tarot-trow { display: grid; grid-template-columns: 44px 26px minmax(0, 1fr) auto; column-gap: 10px; align-items: center; min-height: 40px; padding: 2px 0; border-top: 1px solid var(--line); }
+.tarot-trow:first-child { border-top: 0; }
+.tarot-trow__t { font: 500 12.5px/16px var(--font-mono); color: var(--text-3); text-align: right; }
+.tarot-trow__mk { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line-2); }
+.tarot-trow__mk img { filter: url(#tarot-plum); }
+:root[data-mode="night"] .tarot-trow__mk img, :root:not([data-mode]) .tarot-trow__mk img { filter: none; }
+.tarot-trow__x { font-size: 13.5px; line-height: 20px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.tarot-trow__x b { font-weight: 600; }
+.tarot-trow__x small { margin-left: 8px; font-size: 12.5px; color: var(--text-3); }
+.tarot-trow__s { font-size: 13px; font-weight: 600; white-space: nowrap; color: var(--text-3); }
+.tarot-trow__s.is-run { color: var(--blue); }
+.tarot-trow__s.is-wait { color: var(--gold); }
+.tarot-trow__s.is-ok { color: var(--tone-success); }
+.tarot-trow__s.is-bad { color: var(--tone-danger); }
+.tarot-trail__all { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; margin-top: auto; padding: 2px 0; font-size: 13px; color: var(--accent); }
+.tarot-trail__all:hover { color: var(--accent-strong); text-decoration: underline; text-underline-offset: 3px; }
+.tarot-hint { font-size: 12.5px; line-height: 18px; color: var(--text-3); }
+.tarot-trail__empty { padding: 4px 0; }
+
+/* 矮窗口（内高 <920，例如 1440×900、1280×800 或 1536×864 的笔记本）：牌桌与牌背先于「此刻同行」出现——整张牌背（标题、汇总卡、第一行工具）要在不滚动时就露出来.
+   牌上的缎带与光晕本来就把「谁在做」写在牌面上，同行与行迹挪到牌背之后，往下滚就是. DOM 顺序不变（读屏与 Tab 顺序仍是同行在前）. */
+@media (max-height: 919px) {
+  .tarot-now { order: 5; }
+  .tarot-table, .tarot-backwrap { order: 2; }
+  .tarot-backwrap { order: 3; }
+}
+
+/* ───────────── 牌桌 ───────────── */
+.tarot-table {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 236px));
+  justify-content: center;
+  gap: 16px;
+  align-items: center;
+  padding: 14px 14px 16px;
+  border-radius: 18px;
+  corner-shape: var(--corner);
+  /* 夜的牌桌：与昼同一张蝶与星点水印（自绘装饰，淡紫 6%）+ 一圈内描边的桌沿（带一道牌框的米金线）；关壁纸后也不是一块平板，不画连线 */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='%23d8c8f0' fill-opacity='.06'%3E%3Cpath d='M22 24l2.4-6.6L31 15l-6.6-2.4L22 6l-2.4 6.6L13 15l6.6 2.4z'/%3E%3Cpath d='M98 88l1.8-5L105 81l-5.2-1.8L98 74l-1.8 5.2L91 81l5.2 2z'/%3E%3Cg transform='translate(78 30) rotate(-18)'%3E%3Cellipse cx='-6' cy='-3' rx='6.5' ry='4.4'/%3E%3Cellipse cx='6' cy='-3' rx='6.5' ry='4.4'/%3E%3Cellipse cx='-4.6' cy='4' rx='4.4' ry='3'/%3E%3Cellipse cx='4.6' cy='4' rx='4.4' ry='3'/%3E%3Crect x='-.7' y='-6' width='1.4' height='13' rx='.7'/%3E%3C/g%3E%3Ccircle cx='46' cy='96' r='1.7'/%3E%3Ccircle cx='118' cy='54' r='1.5'/%3E%3Ccircle cx='8' cy='70' r='1.3'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 132px 132px,
+    radial-gradient(ellipse 62% 74% at 50% 42%, rgb(98 70 150 / 0.3), rgb(20 15 40 / 0) 72%),
+    linear-gradient(180deg, rgb(18 14 34 / 0.46), rgb(18 14 34 / 0.28));
+  box-shadow: inset 0 0 0 1px var(--line), inset 0 0 0 6px rgb(18 14 34 / 0.35), inset 0 0 0 7px rgb(200 185 154 / 0.28);
+}
+:root[data-mode="day"] .tarot-table {
+  /* 昼的牌桌：淡紫桌面 + 一圈内描边（桌沿，带一道牌框的米金线）+ 6% 的蝶与星点水印（自绘装饰，不是她的形象），不画连线 */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='132' height='132' viewBox='0 0 132 132'%3E%3Cg fill='%2368328c' fill-opacity='.07'%3E%3Cpath d='M22 24l2.4-6.6L31 15l-6.6-2.4L22 6l-2.4 6.6L13 15l6.6 2.4z'/%3E%3Cpath d='M98 88l1.8-5L105 81l-5.2-1.8L98 74l-1.8 5.2L91 81l5.2 2z'/%3E%3Cg transform='translate(78 30) rotate(-18)'%3E%3Cellipse cx='-6' cy='-3' rx='6.5' ry='4.4'/%3E%3Cellipse cx='6' cy='-3' rx='6.5' ry='4.4'/%3E%3Cellipse cx='-4.6' cy='4' rx='4.4' ry='3'/%3E%3Cellipse cx='4.6' cy='4' rx='4.4' ry='3'/%3E%3Crect x='-.7' y='-6' width='1.4' height='13' rx='.7'/%3E%3C/g%3E%3Ccircle cx='46' cy='96' r='1.7'/%3E%3Ccircle cx='118' cy='54' r='1.5'/%3E%3Ccircle cx='8' cy='70' r='1.3'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 132px 132px,
+    radial-gradient(ellipse 62% 74% at 50% 42%, rgb(196 172 232 / 0.42), rgb(228 216 241 / 0) 72%),
+    linear-gradient(180deg, #e7dcf4, #dacced);
+  box-shadow: inset 0 0 0 1px #cdbfe3, inset 0 0 0 6px #ece3f7, inset 0 0 0 7px rgb(200 185 154 / 0.5), inset 0 -8px 24px rgb(90 55 130 / 0.10);
+}
+@container tarot (min-width: 640px) {
+  .tarot-table { grid-template-columns: minmax(0, 1fr) minmax(0, 1.26fr) minmax(0, 1fr) minmax(0, 1fr); justify-content: stretch; gap: 12px; padding: 16px 14px 16px; }
+  /* 牌的高宽比（小牌 1.6、主牌 1.55）只在一排时用；2×2 时按内容定高，不留空白 */
+  .tarot-card { aspect-ratio: 1 / 1.6; }
+  .tarot-card.is-hero { aspect-ratio: 1 / 1.55; }
+  /* DOM 顺序是遐蝶、检索、编码、审查；这里让遐蝶主牌居二，样稿 A 的牌阵. */
+  .tarot-card[data-agent="researcher"] { order: 1; }
+  .tarot-card[data-agent="orchestrator"] { order: 2; }
+  .tarot-card[data-agent="coder"] { order: 3; }
+  .tarot-card[data-agent="reviewer"] { order: 4; }
+}
+
+/* 矮窗口里的同行简版（CrewStrip）：牌桌顶上一条 28 px 的紧凑条，四枚 20 px 命途图标 + 名 + 状态词，右端「最近：…›」点开是行迹.
+   完整版同行与行迹留在牌背之后；高窗口里这条不显示（那里完整版就在牌桌上方）. */
+.tarot-strip { display: none; }
+@media (max-height: 919px) {
+  .tarot .tarot-table { padding-top: 44px; }
+  .tarot-strip {
+    position: absolute; z-index: 2; top: 9px; left: 14px; right: 14px; height: 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0;
+  }
+  .tarot-strip__who { display: flex; align-items: center; gap: 6px; flex: none; margin: 0; padding: 0; list-style: none; }
+  .tarot-strip__chip {
+    display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px 0 4px; border-radius: 14px;
+    background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); white-space: nowrap;
+  }
+  .tarot-strip__chip .hmark { filter: url(#tarot-plum); }
+  .tarot-strip__chip b { font: 600 13px/1 var(--font-sans); letter-spacing: 0.04em; color: var(--text); }
+  .tarot-strip__chip small { font-size: 12.5px; line-height: 1; color: var(--text-3); }
+  .tarot-strip__chip.is-busy { box-shadow: inset 0 0 0 1.5px var(--ring-work); }
+  .tarot-strip__chip.is-busy small { color: var(--blue); font-weight: 600; }
+  .tarot-strip__chip.is-off { opacity: 0.6; }
+  .tarot-strip__chip.is-off b { color: var(--text-3); }
+  .tarot-strip__last {
+    display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; flex: 0 1 auto; min-width: 0; height: 28px; padding: 0 2px;
+    font: 500 12.5px/1 var(--font-sans); color: var(--accent); background: transparent; cursor: pointer; white-space: nowrap;
+  }
+  .tarot-strip__last span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .tarot-strip__last svg { flex: none; }
+  .tarot-strip__last:hover { color: var(--accent-strong); }
+  .tarot-strip__last:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+}
+:root[data-mode="night"] .tarot-strip__chip .hmark, :root:not([data-mode]) .tarot-strip__chip .hmark { filter: none; }
+@container tarot (max-width: 659px) { .tarot-strip__last { display: none; } }
+@container tarot (max-width: 559px) { .tarot-strip__chip small { display: none; } }
+
+.tarot-card {
+  position: relative;
+  container: tcard / inline-size;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: 13px;
+  corner-shape: var(--corner);
+  background: var(--card-frame);
+  color: var(--face-ink);
+  box-shadow: var(--card-shadow);
+  transition: translate var(--dur-2) var(--ease), box-shadow var(--dur-2) var(--ease);
+}
+.tarot-card.is-hero { box-shadow: var(--card-shadow), 0 0 60px rgb(var(--accent-rgb) / 0.3); }
+.tarot-card.is-figure { padding-bottom: 27px; }   /* 立绘下方的署名条 */
+.tarot-card:hover { translate: 0 -3px; }
+.tarot-card.is-work { box-shadow: 0 0 0 2px var(--ring-work), 0 0 34px rgb(var(--blue-rgb) / 0.5), 0 0 90px rgb(var(--blue-rgb) / 0.2), var(--card-shadow); }
+.tarot-card.is-wait { box-shadow: 0 0 0 2px var(--ring-wait), 0 0 30px rgb(var(--gold-rgb) / 0.45), var(--card-shadow); }
+.tarot-card.is-selected { outline: 2px solid var(--accent); outline-offset: 5px; }
+@container tarot (min-width: 640px) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tarot-card.is-mate:not(.is-selected):not(.is-down) { rotate: var(--tilt, 0deg); }
+    .tarot-card[data-agent="researcher"] { --tilt: -1deg; }
+    .tarot-card[data-agent="coder"] { --tilt: 1deg; }
+    .tarot-card[data-agent="reviewer"] { --tilt: -1deg; }
+  }
+}
+:root[data-motion="reduced"] .tarot-card { rotate: none !important; translate: none !important; }
+
+.tarot-face {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 10px 8px;
+  border-radius: 9px;
+  corner-shape: var(--corner);
+  background: var(--card-ground);
+  box-shadow: inset 0 0 0 1px var(--card-tan);
+  font-family: var(--font-sans);
+  color: var(--face-ink);
+}
+.tarot-face::after { content: ""; position: absolute; inset: 5px; border-radius: 6px; box-shadow: inset 0 0 0 1px var(--face-line); pointer-events: none; }
+.tarot-face.is-turn { animation: tarot-turn 280ms var(--ease) both; }
+@keyframes tarot-turn { from { transform: perspective(600px) rotateY(88deg); opacity: 0.3; } to { transform: none; opacity: 1; } }
+
+/* 牌框装饰：上角涡卷与下角叶翼（自绘装饰，不是她的形象） */
+.tarot-orn { position: absolute; inset: 0; pointer-events: none; color: var(--orn); }
+.tarot-orn__c { position: absolute; top: 0; width: 25cqw; height: 25cqw; overflow: visible; }
+.tarot-orn__c--l { left: 0; }
+.tarot-orn__c--r { right: 0; transform: scaleX(-1); }
+.tarot-orn__l { position: absolute; bottom: 2px; width: 17cqw; height: 15cqw; color: var(--orn2); opacity: 0.85; overflow: visible; }
+.tarot-orn__l--l { left: 2px; }
+.tarot-orn__l--r { right: 2px; transform: scaleX(-1); }
+
+/* ① 序号 + 驱动小标 */
+.tarot-top { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 26px; }
+.tarot-num, .tarot-type {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%;
+  background: var(--card-solid); box-shadow: 0 0 0 1px var(--card-tan), inset 0 0 0 2px var(--card-solid), inset 0 0 0 3px var(--face-line);
+  font: 600 12.5px/1 var(--font-serif); color: var(--face-ink);
+}
+.tarot-type { padding: 4px; object-fit: contain; box-sizing: border-box; }
+.tarot-top__l { display: inline-flex; align-items: center; gap: 5px; }
+.tarot-num--mark { padding: 0; }
+/* 主牌左上两枚徽记（量子属性 + 记忆命途）：24 → 28 px 的圆，浅底 + 米金描边，夜里深蓝的量子图标也看得清；图标保持官方原色. */
+.tarot-top__l .tarot-type, .tarot-top__l .tarot-num--mark { width: 28px; height: 28px; box-shadow: inset 0 0 0 1px var(--card-tan); }
+.tarot-top__l .tarot-type { padding: 3px; background: rgb(246 241 230 / 0.9); }
+.tarot-top__l .tarot-num--mark { background: rgb(246 241 230 / 0.16); }
+:root[data-mode="day"] .tarot-top__l .tarot-type, :root[data-mode="day"] .tarot-top__l .tarot-num--mark { background: rgb(246 241 230 / 0.9); }
+.tarot-num--mark img { filter: url(#tarot-plum); }
+:root[data-mode="night"] .tarot-num--mark img, :root:not([data-mode]) .tarot-num--mark img { filter: none; }
+.tarot-seal {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 9px; border-radius: 11px;
+  background: var(--card-solid); box-shadow: inset 0 0 0 1.3px var(--seal-gold); color: var(--seal-gold);
+  font: 600 12.5px/1 var(--font-sans); letter-spacing: 0.04em; white-space: nowrap;
+}
+.tarot-seal.is-follow { box-shadow: inset 0 0 0 1.3px var(--silver); color: var(--silver); }
+.tarot-crescent-s { width: 20px; height: 20px; color: var(--orn2); }
+
+/* ② 月面 */
+.tarot-moon {
+  --m: 52cqw;
+  position: relative; display: grid; place-items: center; flex: none; width: var(--m); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle at 36% 28%, var(--moon-a), var(--moon-b) 52%, var(--moon-c) 100%);
+  box-shadow: 0 0 0 3px var(--card-solid), 0 0 0 4.5px var(--card-tan), 0 0 0 7.5px var(--card-solid), 0 0 0 8.5px var(--face-line), inset 0 0 14px rgb(70 40 110 / 0.25);
+}
+.tarot-card.is-hero .tarot-moon { --m: 50cqw; }
+/* 命途图标（≥48 px 的中图是「白底黑边」的双色图标）原样放在深紫月面上，不着色；<48 px 的白色剪影图标才在昼里着成深紫 */
+.tarot-moon.is-mark { background: radial-gradient(circle at 36% 28%, #8f6bc0, #5b3b90 56%, #3d2468 100%); }
+/* 月面底色夜昼都是深紫：官方中图（智识 / 巡猎 / 存护 / 记忆）昼里也保持官方原样的白底黑边，不套 her.css 的 `brightness(.5)` 压暗.
+   浅底上的小图（同行节点、行迹、左上角徽记）仍走 tarot-plum 滤镜. */
+:root[data-mode="day"] .tarot-moon.is-mark .hmark { --hmark-tint: none; }
+.tarot-moon__fig {
+  position: absolute; inset: 0; border-radius: 50%;
+  background-repeat: no-repeat;
+  /* 官方立绘（1181×1600）取脸与荆棘冠：缩放 ≈39%（样稿 A：144 px 月面 ↔ 460 px 宽），渲染宽度始终 < 原图宽 */
+  background-size: calc(var(--m) * 3.194) auto;
+  background-position: calc(var(--m) * -1.799) calc(var(--m) * -0.951);
+}
+.tarot-moon__crescent { width: 52%; height: 52%; color: #e9dff5; }
+.tarot-card.is-down .tarot-moon { background: radial-gradient(circle at 40% 32%, #6a559a, #3a2c5a 70%); }
+
+/* ③ 牌名 + 命途 */
+.tarot-title { display: flex; flex-direction: column; align-items: center; gap: 0; margin-top: 4px; max-width: 100%; text-align: center; }
+.tarot-name { font: 600 23px/28px var(--font-serif); letter-spacing: 0.24em; padding-left: 0.24em; color: var(--face-ink); overflow-wrap: anywhere; }
+.tarot-card.is-hero .tarot-name { font-size: 28px; line-height: 34px; }
+.tarot-name.is-long { font-size: 21px; line-height: 26px; letter-spacing: 0.08em; padding-left: 0.08em; }
+.tarot-card.is-hero .tarot-name.is-long { font-size: 22px; line-height: 28px; }
+.tarot-path { font: 500 12.5px/18px var(--font-sans); letter-spacing: 0.22em; padding-left: 0.22em; color: var(--face-ink-3); }
+
+/* ④ 档位一行 */
+.tarot-tiers { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 2px 6px; max-width: 100%; min-height: 22px; text-align: center; font: 500 12.5px/20px var(--font-sans); color: var(--face-ink-2); font-variant-numeric: tabular-nums; }
+.tarot-tier { display: inline-flex; flex: none; align-items: center; white-space: nowrap; }
+.tarot-tier i { display: inline-block; flex: none; width: 10px; height: 10px; margin-right: 3px; border-radius: 50%; }
+.tarot-tier.is-auto i { background: var(--tier-auto); box-shadow: 0 0 0 1.5px #5b4a86; }
+.tarot-tier.is-confirm i { background: linear-gradient(90deg, #eceaf4 0 50%, #4a4566 50% 100%); box-shadow: 0 0 0 1.5px #8a85ad; }
+.tarot-tier.is-off i { background: linear-gradient(135deg, transparent 42%, #cfc6ea 42% 58%, transparent 58%), var(--tier-off); box-shadow: 0 0 0 1.5px #cfc6ea; }
+.tarot-tiers[data-kind="none"], .tarot-tiers[data-kind="partial"], .tarot-tiers[data-kind="notools"] { color: var(--face-ink-3); }
+
+/* ⑤ 缎带 */
+.tarot-ribbon {
+  position: relative; z-index: 1; align-self: stretch; margin: auto 4px 8px; display: flex; align-items: center; justify-content: center;
+  min-height: 26px; padding: 4px 10px; text-align: center; white-space: normal;
+  font: 600 12.5px/17px var(--font-sans); letter-spacing: 0.04em; color: #f6f3fa;
+  background: linear-gradient(90deg, #4b2670, #68328c 60%, #7c4ca3);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%, 8px 50%);
+}
+.tarot-ribbon.is-busy { background: linear-gradient(90deg, #17407c, #2260ab 60%, #2d75c4); }
+.tarot-ribbon.is-wait { background: linear-gradient(90deg, #6f4600, #8f5d06 60%, #a86f10); color: #fff8e8; }
+.tarot-ribbon.is-off { background: linear-gradient(90deg, #4a4660, #5b5775); }
+
+/* 主栏到顶（≥800，窗口 ≥1366 宽）：牌面比 660–800 的窄档饱满——月面放大、高宽比收紧，让立绘里的脸有分量，也不在白·银·黑一行和缎带之间留死带.
+   主牌月面 62cqw（1440 宽下约 138 px；立绘仍按 --m 等比，渲染宽度 ≈ 440 px < 原图 1181），小牌 58cqw. */
+@container tarot (min-width: 800px) {
+  .tarot-card { aspect-ratio: 1 / 1.46; }
+  .tarot-card.is-hero { aspect-ratio: 1 / 1.42; }
+  .tarot-moon { --m: 58cqw; }
+  .tarot-card.is-hero .tarot-moon { --m: 62cqw; }
+  .tarot-moon__mark { scale: 1.12; }
+  /* 余量匀给各行，不全堆在缎带上方 */
+  .tarot-face { justify-content: space-between; }
+  .tarot-ribbon { margin-top: 0; }
+}
+
+/* 一排里最窄的小牌（主栏 640–720 px，卡片内宽 ≤140 px，如 960 窗口）：收紧牌面左右内边距与档位间距，「白4 银2 黑3」一行、缎带「第 3 步 · 待命」一行都放得下，字号仍是 12.5 */
+@container tcard (max-width: 140px) {
+  .tarot-face { padding-inline: 6px; }
+  /* 组与组之间留 6 px（符号到自己的字 2 px），三组读成三块，不是「白4◐」「银2⊘」 */
+  .tarot-tiers { gap: 2px 6px; }
+  .tarot-tier i { width: 9px; height: 9px; margin-right: 2px; }
+  .tarot-ribbon { margin-inline: 2px; padding-inline: 8px; }
+  .tarot-seal { padding: 0 7px; }
+}
+
+/* 点击区与「翻回正面」 */
+.tarot-pick { position: absolute; inset: 0; z-index: 1; border-radius: 13px; background: transparent; cursor: pointer; }
+.tarot-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.tarot-flip {
+  position: relative; z-index: 2; align-self: center; height: 28px; padding: 0 14px; border-radius: 14px;
+  font: 600 12.5px/1 var(--font-sans); color: #efe8f8; background: rgb(255 255 255 / 0.06); box-shadow: inset 0 0 0 1.3px rgb(214 190 226 / 0.7); white-space: nowrap; cursor: pointer;
+}
+.tarot-flip:hover { background: rgb(255 255 255 / 0.14); }
+.tarot-flip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tarot-credit { position: absolute; left: 6px; right: 6px; bottom: 5px; text-align: center; font: 500 12.5px/17px var(--font-sans); color: #5a4a7a; }
+
+/* 扣下的牌：换成牌背，降饱和，步骤交给遐蝶 */
+.tarot-card.is-down { background: linear-gradient(180deg, #5a4a78, #33274d); --card-solid: #33274d; --face-ink: #efe8f8; --face-ink-2: #d9cfe8; --face-ink-3: #c3b7d6; --orn: #a58ac4; --orn2: #a58ac4; }
+.tarot-card.is-down .tarot-face {
+  background: repeating-linear-gradient(135deg, rgb(255 255 255 / 0.05) 0 2px, transparent 2px 11px), radial-gradient(ellipse at 50% 42%, #4b3a6e, #2a2040 72%);
+  box-shadow: inset 0 0 0 1px rgb(200 185 154 / 0.55);
+}
+
+/* ───────────── 牌背 ───────────── */
+.tarot-backwrap { min-width: 0; }
+.tarot-back {
+  position: relative; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px;
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 16px; corner-shape: var(--corner);
+  box-shadow: var(--shadow-panel); backdrop-filter: blur(var(--blur)) saturate(1.12);
+}
+.tarot-back__pt {
+  display: none; position: absolute; top: -8px; left: var(--pt, 38%); width: 14px; height: 14px; transform: translateX(-50%) rotate(45deg);
+  background: var(--surface-strong); border-top: 1px solid var(--line-2); border-left: 1px solid var(--line-2); border-top-left-radius: 3px;
+}
+.tarot-back[data-pt="0"] { --pt: 11.5%; }
+.tarot-back[data-pt="1"] { --pt: 38%; }
+.tarot-back[data-pt="2"] { --pt: 65%; }
+.tarot-back[data-pt="3"] { --pt: 88%; }
+@container tarot (min-width: 640px) { .tarot-back__pt { display: block; } }
+
+.tarot-back__head { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 18px; align-items: center; }
+@container tarot (min-width: 660px) { .tarot-back__head { grid-template-columns: auto minmax(0, 1fr) max-content; } }
+.tarot-back__title { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.tarot-back__title h2 { font: 600 16px/22px var(--font-serif); letter-spacing: 0.06em; color: var(--text); }
+.tarot-back__title small { font-size: 12.5px; line-height: 17px; color: var(--text-3); }
+.tarot-back__title small[lang="en"] { font: 500 12px/16px var(--font-display); letter-spacing: 0.26em; }
+.tarot-back__say { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 52px; }
+.tarot-say { display: flex; align-items: flex-start; gap: 10px; }
+.tarot-say__text {
+  flex: 1; min-width: 0; margin: 0; padding: 6px 14px 7px; background: var(--herbub); box-shadow: inset 0 0 0 1px var(--her-line);
+  border-radius: 5px 14px 14px 14px; font: 400 14px/22px var(--font-serif); color: var(--text); text-wrap: pretty;
+}
+.tarot-say.is-reply .tarot-say__text { box-shadow: inset 0 0 0 1.5px var(--accent-line); }
+.tarot-reply { min-width: 0; }
+
+.tarot-toggle { display: grid; grid-template-columns: auto auto; grid-template-areas: "l s" "d d"; align-items: center; justify-content: end; justify-items: end; gap: 3px 10px; width: max-content; max-width: 100%; }
+.tarot-toggle__text { display: contents; }
+.tarot-toggle__label { grid-area: l; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.tarot-toggle__text small { grid-area: d; max-width: 120px; font-size: 12px; line-height: 16px; color: var(--text-3); white-space: nowrap; text-align: right; }
+.tarot-toggle .tarot-sw { grid-area: s; }
+.tarot-sw { position: relative; flex: none; width: 40px; height: 22px; border-radius: 11px; background: rgb(173 144 183 / 0.4); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: pointer; }
+.tarot-sw__thumb { position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgb(0 0 0 / 0.4); transition: translate var(--dur-1) var(--ease); }
+.tarot-sw.is-on { background: linear-gradient(180deg, #8a5cb0, #68328c); }
+.tarot-sw.is-on .tarot-sw__thumb { translate: 18px 0; }
+.tarot-sw.is-locked { cursor: pointer; }
+.tarot-sw__lock { position: absolute; left: 6px; top: 5.5px; color: #4b2670; pointer-events: none; }
+.tarot-sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* 白 / 银 / 黑汇总卡 */
+.tarot-sums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tarot-sums.is-none { grid-template-columns: minmax(0, 1fr); }
+.tarot-sum {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr); grid-template-areas: "g n t" "g n s"; align-items: center; column-gap: 8px; row-gap: 0;
+  padding: 8px 12px; text-align: left; background: var(--surface-sunken); border: 1px solid var(--line-2); border-radius: 12px; corner-shape: var(--corner); color: var(--text);
+  transition: border-color var(--dur-1) var(--ease), box-shadow var(--dur-1) var(--ease), background var(--dur-1) var(--ease);
+}
+button.tarot-sum { cursor: pointer; }
+button.tarot-sum:hover { border-color: var(--line-strong); }
+.tarot-sum.is-on { border-color: var(--accent); box-shadow: var(--glow-accent); background: var(--accent-soft); }
+.tarot-sum:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tarot-sum__g { grid-area: g; display: inline-flex; gap: 3px; }
+.tarot-sum__n { grid-area: n; font: 600 24px/1 var(--font-sans); font-variant-numeric: tabular-nums; }
+.tarot-sum__t { grid-area: t; font-size: 13.5px; font-weight: 600; line-height: 18px; }
+.tarot-sum small { grid-area: s; font-size: 12.5px; line-height: 17px; color: var(--text-3); }
+.tarot-sum.is-none { grid-template-areas: "g t" "g s"; grid-template-columns: auto minmax(0, 1fr); }
+.tarot-note { margin: 0; padding: 10px 14px; border: 1px dashed var(--line-2); border-radius: 12px; background: var(--surface-sunken); font-size: 13.5px; line-height: 21px; color: var(--text-2); }
+
+/* 工具行：两列，列优先 */
+.tarot-tools { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0; padding: 0; list-style: none; }
+@container tarot (min-width: 660px) {
+  .tarot-tools { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(5, auto); grid-auto-flow: column; column-gap: 26px; }
+}
+.tarot-tool { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 4px; border-bottom: 1px solid var(--line); border-radius: 8px; transition: opacity var(--dur-1) var(--ease); }
+.tarot-tool__ic { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; box-shadow: inset 0 0 0 1px var(--line-2); color: var(--text-2); }
+.tarot-tool__txt { display: flex; flex: 1 1 auto; flex-direction: column; min-width: 0; }
+.tarot-tool__name { font-size: 14px; line-height: 19px; color: var(--text); }
+.tarot-tool__note { display: flex; flex-direction: column; font-size: 12.5px; line-height: 17px; color: var(--text-3); text-wrap: pretty; word-break: keep-all; }
+.tarot-tool__note > span { white-space: nowrap; }
+.tarot-tool__honor { max-width: 100%; }
+/* 来源与遵守情况：永远各占一行，不用「·」连接——一行放不下时「·」会被挤到行首挂着；两行（17 + 19 px）正好落在行的 48 px 最小高度里，不增高 */
+.tarot-tool.is-muted { opacity: 0.66; }
+.tarot-tool.is-dim .tarot-tool__ic, .tarot-tool.is-dim .tarot-tool__name, .tarot-tool.is-dim .tarot-seg { opacity: 0.55; }
+.tarot-tool[data-source="tightened"] .tarot-tool__note { color: var(--accent); }
+.tarot-tool[data-source="global-off"] .tarot-tool__note { color: var(--text-3); text-decoration: line-through; text-decoration-thickness: 1px; }
+.tarot-other { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -4px 0 0; }
+.tarot-fixed { display: inline-flex; align-items: center; flex: none; gap: 5px; height: 26px; padding: 0 10px; border-radius: 13px; box-shadow: inset 0 0 0 1px var(--line-2); font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+
+.tarot-seg { display: inline-flex; flex: none; gap: 2px; padding: 3px; border-radius: 14px; background: rgb(0 0 0 / 0.18); box-shadow: inset 0 0 0 1px var(--line-2); }
+:root[data-mode="day"] .tarot-seg { background: rgb(90 58 126 / 0.07); }
+.tarot-seg__opt { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 9px 0 6px; border-radius: 12px; font: 600 12.5px/1 var(--font-sans); color: var(--text-3); cursor: pointer; transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease); }
+.tarot-seg__opt:hover:not(.is-blocked):not(.is-on) { color: var(--text); background: var(--surface-hover); }
+.tarot-seg__opt.is-on.is-auto { background: #fbf9ff; color: #3a2a5c; box-shadow: 0 0 0 1.5px #5b4a86; }
+.tarot-seg__opt.is-on.is-confirm { background: linear-gradient(135deg, #eceaf4, #a29fbb); color: #2a2144; box-shadow: inset 0 0 0 1px #8a85ad; }
+.tarot-seg__opt.is-on.is-off { background: #17121f; color: #efe8fb; box-shadow: 0 0 0 1.5px #cfc6ea; }
+.tarot-seg__opt.is-blocked { opacity: 0.38; cursor: not-allowed; }
+.tarot-seg__opt:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tarot-seg__opt.is-on { cursor: default; }
+.tarot-glyph { flex: none; }
+
+/* 模型、说明、统计 */
+.tarot-back__cols { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px 28px; }
+@container tarot (min-width: 660px) { .tarot-back__cols { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+.tarot-back__col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.tarot-model { display: flex; flex-direction: column; gap: 10px; }
+.tarot-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.tarot-honor { display: flex; flex-direction: column; gap: 3px; padding: 3px 0 3px 12px; border-left: 2px solid var(--orn); color: var(--text-2); }
+.tarot-honor__text { margin: 0; font-size: 13.5px; line-height: 21px; }
+.tarot-honor small { font-size: 12.5px; line-height: 17px; color: var(--text-3); }
+.tarot-stats { display: flex; flex-wrap: wrap; gap: 8px var(--sp-5); margin: 0; }
+.tarot-stats > div { display: flex; flex-direction: column-reverse; gap: 2px; }
+.tarot-stats dt { font-size: 12.5px; color: var(--text-3); }
+.tarot-stats dd { margin: 0; font: 600 22px/1.15 var(--font-sans); color: var(--text); font-variant-numeric: tabular-nums; }
+.tarot-stats .is-error dd { color: var(--tone-danger); }
+.tarot-week { display: flex; align-items: flex-end; gap: 12px; }
+.tarot-week__bars { display: flex; align-items: flex-end; gap: 4px; height: 40px; }
+.tarot-week__bars i { display: block; width: 10px; border-radius: 2px 2px 0 0; background: linear-gradient(180deg, #b79bd0, #865c98); }
+:root[data-mode="day"] .tarot-week__bars i { background: linear-gradient(180deg, #8a68b5, #5a3a7e); }
+.tarot-week small { font-size: 12.5px; color: var(--text-3); }
+.tarot-taken { margin: 0; }
+.tarot-orchnote { margin: 0; }
+
+/* 窄屏：2×2 的牌不倾斜，工具行单列（容器 <660 时上面的 @container 规则本来就没生效） */
+@media (forced-colors: active) {
+  .tarot-card.is-selected { outline-color: Highlight; }
+  .tarot-seg__opt.is-on { outline: 2px solid Highlight; }
+}

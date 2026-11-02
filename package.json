@@ -1,0 +1,128 @@
+{
+  "name": "alight-desk",
+  "version": "0.3.0-beta.2",
+  "private": true,
+  "description": "栖枝 · Alight — 以《崩坏：星穹铁道》遐蝶为主题的 AI Agent 桌面工作台（非官方同人项目）",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5317 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5318 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "verify": "tsc --noEmit && npm run check:unit && npm run check:modules && vite build && node scripts/check-build.mjs",
+    "check:unit": "rolldown scripts/unit-check.ts --platform node --format esm --file node_modules/.cache/unit-check.mjs && node node_modules/.cache/unit-check.mjs",
+    "legal": "rolldown scripts/gen-legal.ts --platform node --format esm --file node_modules/.cache/gen-legal.mjs && node node_modules/.cache/gen-legal.mjs",
+    "app": "vite build && electron .",
+    "dist:win": "npm run legal && npm run verify && electron-builder --win nsis portable",
+    "check:store": "rolldown scripts/check-store.ts --platform node --format esm --file node_modules/.cache/check-store.mjs && node node_modules/.cache/check-store.mjs",
+    "check:engine": "rolldown scripts/check-engine.ts --platform node --format esm --file node_modules/.cache/check-engine.mjs && node node_modules/.cache/check-engine.mjs",
+    "check:interaction": "rolldown scripts/check-interaction.ts --platform node --format esm --file node_modules/.cache/check-interaction.mjs && node node_modules/.cache/check-interaction.mjs",
+    "check:security": "rolldown scripts/check-security.ts --platform node --format esm --file node_modules/.cache/check-security.mjs && node node_modules/.cache/check-security.mjs",
+    "check:services": "rolldown scripts/check-services.ts --platform node --format esm --file node_modules/.cache/check-services.mjs && node node_modules/.cache/check-services.mjs",
+    "check:acp": "node scripts/fixtures/fake-acp-suite.cjs",
+    "check:models-ui": "rolldown -c scripts/check-models-ui.rolldown.mjs && node node_modules/.cache/check-models-ui.mjs",
+    "check:voice": "rolldown scripts/check-voice.ts --platform node --format esm --file node_modules/.cache/check-voice.mjs && node node_modules/.cache/check-voice.mjs",
+    "check:logic": "rolldown scripts/check-logic.ts --platform node --format esm --file node_modules/.cache/check-logic.mjs && node node_modules/.cache/check-logic.mjs",
+    "check:ui": "rolldown -c scripts/check-ui.rolldown.mjs && node node_modules/.cache/check-ui.mjs",
+    "check:ui-chat": "rolldown -c scripts/check-ui-chat.rolldown.mjs && node node_modules/.cache/check-ui-chat.mjs",
+    "check:art": "node scripts/check-art.mjs",
+    "check:boot": "rolldown scripts/check-boot.ts --platform node --format esm --file node_modules/.cache/check-boot.mjs && node node_modules/.cache/check-boot.mjs",
+    "check:pet-desktop": "rolldown scripts/pet-check.ts --platform node --format esm --file node_modules/.cache/pet-check.mjs && node node_modules/.cache/pet-check.mjs",
+    "check:pet-brain": "rolldown scripts/pet-brain-check.ts --platform node --format esm --file node_modules/.cache/pet-brain-check.mjs && node node_modules/.cache/pet-brain-check.mjs",
+    "check:pet-ui": "rolldown scripts/pet-ui-check.ts --platform node --format esm --file node_modules/.cache/pet-ui-check.mjs && node node_modules/.cache/pet-ui-check.mjs",
+    "check:pet-rig": "rolldown scripts/pet-rig-check.ts --platform node --format esm --file node_modules/.cache/pet-rig-check.mjs && node node_modules/.cache/pet-rig-check.mjs",
+    "check:pet": "npm run check:pet-desktop && npm run check:pet-brain && npm run check:pet-ui && npm run check:pet-rig",
+    "check:probe": "node scripts/probe/run.mjs selftest",
+    "check:modules": "npm run check:store && npm run check:engine && npm run check:interaction && npm run check:security && npm run check:services && npm run check:models-ui && npm run check:voice && npm run check:logic && npm run check:ui && npm run check:ui-chat && npm run check:art && npm run check:boot && npm run check:pet && npm run check:probe",
+    "smoke:services": "node scripts/smoke/services-smoke.mjs",
+    "smoke:ui": "node scripts/smoke/ui/models-ui.mjs",
+    "probe": "node scripts/probe/run.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.310"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "electron": "45.0.0",
+    "electron-builder": "^26.15.3",
+    "immer": "11.1.21",
+    "lucide-react": "1.51.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.2"
+  },
+  "author": "xtdf0224-boop",
+  "license": "MIT",
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "io.github.xtdf0224-boop.alight",
+    "productName": "Alight",
+    "copyright": "Copyright © 2026 xtdf0224-boop",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "examples/skills/**/*",
+      "build/icon.ico",
+      "build/icon.png",
+      "package.json",
+      "!**/*.map"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "electron/ai/browser-mcp.cjs",
+      "node_modules/@anthropic-ai/claude-agent-sdk-win32-x64/**"
+    ],
+    "extraFiles": [
+      {
+        "from": "licenses",
+        "to": "licenses"
+      }
+    ],
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "build/icon.ico",
+      "executableName": "Alight",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "栖枝",
+      "uninstallDisplayName": "栖枝",
+      "license": "build/license.txt",
+      "language": "2052",
+      "installerLanguages": [
+        "zh_CN"
+      ],
+      "artifactName": "Alight-Setup-${version}.exe",
+      "include": "build/installer.nsh",
+      "installerSidebar": "build/installer/stub.bmp",
+      "uninstallerSidebar": "build/installer/stub.bmp",
+      "installerHeader": "build/installer/header.bmp",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true
+    },
+    "portable": {
+      "artifactName": "Alight-${version}-portable.exe",
+      "splashImage": "build/installer/portable-splash.bmp"
+    },
+    "electronDist": "node_modules/electron/dist"
+  },
+  "allowScripts": {
+    "electron@45.0.0": true
+  }
+}

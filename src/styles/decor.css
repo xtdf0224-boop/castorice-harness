@@ -1,0 +1,404 @@
+/* Decor: 壁纸（夜 / 昼）、落雪与蝶（Ambience）、品牌小件；开屏在 boot.css。
+   颜色来自令牌；动画只用 transform / opacity / stroke-dashoffset。
+   注意：不要手写 -webkit-backdrop-filter（会让 Vite 把标准属性丢掉，scripts/check-build.mjs 守着这条）。 */
+
+/* ───────────── 字体：Cinzel ─────────────
+   SIL Open Font License 1.1（© 2020 The Cinzel Project Authors）。Latin 子集 woff，可变字重 400–900，约 31 KB，随应用附带；
+   许可证全文在 public/fonts/OFL-Cinzel.txt（随包发布）。只用于「ALIGHT」字标、版本号等英文装饰字（--font-display）；
+   中文与其余文字仍走 --font-sans / --font-serif。 */
+@font-face {
+  font-family: "Cinzel";
+  src: url("/fonts/cinzel-latin.woff") format("woff");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ───────────── Ambience（canvas）与停落的蝶 ───────────── */
+.ambience {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+}
+.landing-host {
+  position: fixed;
+  inset: 0;
+  z-index: 55;                 /* above panels and toasts, below dialogs (60) */
+  overflow: hidden;
+  pointer-events: none;
+  contain: layout paint style;
+}
+.landing {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 34px;
+  height: 27px;
+  transform-origin: 50% 80%;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 0 7px rgb(124 200 247 / 0.7));
+}
+.landing svg { width: 100%; height: 100%; overflow: visible; }
+
+/* ───────────── 品牌小件 ───────────── */
+.brand-mark { flex: none; overflow: visible; }
+.brand-mark--glow { filter: drop-shadow(0 0 6px rgb(124 200 247 / 0.28)); }
+.butterfly { flex: none; overflow: visible; }
+.butterfly--solid { filter: drop-shadow(0 0 5px rgb(124 200 247 / 0.5)); }
+.alt-ic { flex: none; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.seed { flex: none; color: currentColor; overflow: visible; }
+
+/* 火种五笔：依次点亮，一个周期 ≥ 1.6 s；五笔是内联 SVG（<use> 里的路径够不着外部 CSS）。 */
+.seed-loader { display: inline-flex; align-items: center; color: var(--text); filter: drop-shadow(0 0 5px rgb(124 200 247 / 0.4)); }
+.seed-loader svg { overflow: visible; }
+.seed-loader .seed-s { opacity: 0.26; animation: seed-light 2.2s ease-in-out infinite; }
+.seed-loader .seed-s:nth-child(1) { animation-delay: 0s; }
+.seed-loader .seed-s:nth-child(2) { animation-delay: 0.22s; }
+.seed-loader .seed-s:nth-child(3) { animation-delay: 0.44s; }
+.seed-loader .seed-s:nth-child(4) { animation-delay: 0.66s; }
+.seed-loader .seed-s:nth-child(5) { animation-delay: 0.88s; }
+@keyframes seed-light { 0%, 8% { opacity: 0.26; } 22%, 70% { opacity: 1; } 100% { opacity: 0.26; } }
+:root[data-motion="reduced"] .seed-loader .seed-s { animation: none; opacity: 1; }
+.btn .seed-loader { color: inherit; filter: none; }
+
+/* 右收尖的深紫横幅（官方卡面语汇的自绘版）：九宫格，只横向拉伸，描边保持细线 */
+:root {
+  --banner-img: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='44' viewBox='0 0 76 44'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%234b2670'/><stop offset='.55' stop-color='%2368328c'/><stop offset='1' stop-color='%23865c98'/></linearGradient></defs><polygon points='0,0 53,0 76,22 53,44 0,44' fill='url(%23g)'/><polygon points='3.5,3.5 52,3.5 71,22 52,40.5 3.5,40.5' fill='none' stroke='white' stroke-opacity='.65' stroke-width='1.1' stroke-linejoin='round'/></svg>");
+}
+:root[data-mode="day"] {
+  --banner-img: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='76' height='44' viewBox='0 0 76 44'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='%23563673'/><stop offset='1' stop-color='%236b4690'/></linearGradient></defs><polygon points='0,0 53,0 76,22 53,44 0,44' fill='url(%23g)'/><polygon points='3.5,3.5 52,3.5 71,22 52,40.5 3.5,40.5' fill='none' stroke='white' stroke-opacity='.8' stroke-width='1.1' stroke-linejoin='round'/></svg>");
+}
+.alt-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  margin: 0;
+  padding: 0 6px 0 4px;
+  border-style: solid;
+  border-width: 0 30px 0 16px;
+  border-image: var(--banner-img) 0 30 0 16 fill / 0 30px 0 16px stretch;
+  color: var(--banner-ink);
+  font-family: var(--font-serif);
+  white-space: nowrap;
+  text-shadow: none;
+}
+.alt-banner b { font-weight: 700; letter-spacing: 0.06em; }
+
+/* ───────────── Wallpaper ─────────────
+   Fixed behind everything (.ambience paints over it, the .app grid over both).
+   夜景图里她的脸在图宽的 57% 处；每页希望她落在窗宽的 --wp-fx 处（decor/wallpapers.ts 的 faceXFor）。
+   图按 max(窗宽, 窗高 × 16∶9) 铺，再水平平移到合适位置（向右最多 160 px——左边露出的那一段落在左栏与主栏的玻璃之下，并羽化；向左不超过「图右缘贴窗」）。 */
+.wallpaper {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg-1);
+}
+.wallpaper--stage-only { background: none; }
+.wallpaper__layer {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 1.2s var(--ease), visibility 0s linear 1.2s;
+}
+.wallpaper__layer.is-active { opacity: 1; visibility: visible; transition: opacity 1.2s var(--ease), visibility 0s; }
+
+.alt-frame,
+.wallpaper__frame {
+  --W: max(100vw, calc(100vh * 1.7778));
+  --fx: var(--wp-fx, 0.73);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--W);
+  height: calc(var(--W) / 1.7778);
+  transform: translate3d(clamp(calc(100vw - var(--W)), calc(var(--fx) * 100vw - var(--wp-face, 0.57) * var(--W)), 160px), 0, 0);
+  transition: transform 700ms var(--ease);
+}
+/* 图向右推时左缘会露出一小段：羽化进底色，藏在左栏玻璃之下。
+   原来是 .wallpaper__img 上的 mask-image: linear-gradient(90deg, transparent 0, #000 150px)——整幅图（约一屏）成了一个遮罩渲染通道，壁纸层在转场里平移 / 缩放时每帧都要重做；
+   现在改成左缘 150 px 宽的一条「底色 → 透明」渐变叠层：底色 × (1 − m) 盖在图上 = 图 × m + 底色 × (1 − m)，与遮罩版同一个式子（底色取夜的 --bg-1，叠层只有 150 px 宽）. */
+.wallpaper__lfade { position: absolute; left: 0; top: 0; bottom: 0; width: 150px; pointer-events: none; background: linear-gradient(90deg, #0e0c19, rgb(14 12 25 / 0)); }
+.wallpaper__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 900ms var(--ease);
+  user-select: none;
+}
+.wallpaper__layer.is-loaded .wallpaper__img { opacity: 1; }
+
+/* 昼：薰衣草底图按 cover 铺满，贴底（花海在下沿），不平移 */
+.wallpaper__layer--day .wallpaper__frame { inset: 0; width: 100%; height: 100%; transform: none; transition: none; }
+.wallpaper__layer--day .wallpaper__img { object-fit: cover; object-position: 50% 100%; }
+
+/* 开屏转场的补丁：枯枝上画中原有的那只紫蝶，开屏的底图里已被抹掉。转场期间（html[data-boot-patch]）补丁盖在壁纸上，
+   主栏的玻璃在它之上——补丁跟着玻璃一起模糊、染色，溶掉开屏底板时蝶不会在玻璃还没进来时「冒出来」；转场结束后 1.4 s 里慢慢淡去。 */
+.wallpaper__bfpatch { position: absolute; max-width: none; pointer-events: none; user-select: none; opacity: 0; transition: opacity 1.4s var(--ease); }
+:root[data-boot-patch] .wallpaper__bfpatch { opacity: 1; transition: none; }
+:root[data-motion="reduced"] .wallpaper__bfpatch { transition: none; }
+
+/* 骨龙遮纱：终版夜景里骨龙骨架在天空里相当显眼，归来页要让她与河岸花环成为焦点。
+   只在龙头与肋骨处叠一层模糊 + 暗纱（径向遮罩），不裁切人物、不重绘（坐标取自样稿，单位为图的 px，随图缩放）。 */
+.wallpaper__dragveil {
+  --u: calc(var(--W) / 1778);
+  --dv: 0.46;
+  --dvb: 5px;
+  /* 元素只取四个遮罩椭圆的外接框（图坐标 x 359–1445、y 0–356，约整幅的 22%），不再铺满整幅：
+     遮罩在这个框之外本来就是全透明，所以画面逐像素不变（椭圆只在框边上相切、那里的遮罩是 0）；
+     但 backdrop-filter 的模糊 + 遮罩表面从整幅（约 50 MB、合成器每一帧都要重做）缩到约 1/5——夜景在转场 / 动画期间的 GPU 负载大头就是它。
+     四个遮罩的圆心坐标相应减去框的左缘（359）；框的上缘就是图的上缘（y 0），模糊的取样边缘与原来一致。 */
+  --dvx: 359;
+  position: absolute;
+  left: calc(var(--dvx) * var(--u));
+  top: 0;
+  width: calc(1086 * var(--u));
+  height: calc(356 * var(--u));
+  pointer-events: none;
+  background: rgb(14 10 34 / var(--dv));
+  backdrop-filter: blur(var(--dvb));
+  mask-image:
+    radial-gradient(ellipse calc(125 * var(--u)) calc(132 * var(--u)) at calc((484 - var(--dvx)) * var(--u)) calc(216 * var(--u)), #000 56%, transparent 100%),
+    radial-gradient(ellipse calc(232 * var(--u)) calc(178 * var(--u)) at calc((765 - var(--dvx)) * var(--u)) calc(178 * var(--u)), #000 50%, transparent 100%),
+    radial-gradient(ellipse calc(310 * var(--u)) calc(88 * var(--u)) at calc((830 - var(--dvx)) * var(--u)) calc(54 * var(--u)), #000 48%, transparent 100%),
+    radial-gradient(ellipse calc(270 * var(--u)) calc(78 * var(--u)) at calc((1175 - var(--dvx)) * var(--u)) calc(42 * var(--u)), #000 42%, transparent 100%);
+}
+/* 烘焙版（Wallpaper.tsx + dragVeilBake.ts）：模糊 / 暗纱 / 遮罩的结果已经画进里面的画布（alpha = 遮罩），元素自己不再带 backdrop-filter、底色与遮罩——
+   这三样是合成器每帧都要重做的渲染通道。几何与色标须与上面的 CSS 一致（dragVeilBake.ts 里是同一组数）. */
+.wallpaper__dragveil > canvas { display: none; position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.wallpaper__dragveil.is-baked { background: none; backdrop-filter: none; mask-image: none; }
+.wallpaper__dragveil.is-baked > canvas { display: block; }
+/* 顶部暗角：压住天空，字与标题栏更稳 */
+.wallpaper__vig {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 300px;
+  background: linear-gradient(180deg, rgb(11 9 24 / 0.55), rgb(11 9 24 / 0.24) 55%, rgb(11 9 24 / 0));
+}
+.wallpaper__layer--day .wallpaper__vig { display: none; }
+/* 可见度罩：它的不透明度是「壁纸可见度」的反面（--wp-dim） */
+.wallpaper__grade {
+  position: absolute;
+  inset: 0;
+  background: rgb(var(--veil-rgb));
+  opacity: var(--wp-dim, 0.14);
+  transition: opacity 700ms var(--ease);
+}
+.wallpaper__edges {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgb(11 9 24 / 0.4) 0, rgb(11 9 24 / 0) 170px);
+}
+:root[data-mode="day"] .wallpaper__edges { background: none; }
+.wallpaper__credit {
+  position: absolute;
+  right: 20px;
+  bottom: calc(var(--console-now) + 22px);
+  margin: 0;
+  max-width: 46vw;
+  font-size: 11.5px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  text-align: right;
+  color: rgb(var(--ink-rgb) / 0.92);
+  text-shadow: var(--text-halo);
+}
+/* 首页与「待你」没有右栏：署名落在右下角、控制台条的上沿之上（不被条盖住）。 */
+.wallpaper[data-view="new"] .wallpaper__credit, .wallpaper[data-view="queue"] .wallpaper__credit { bottom: calc(var(--console-now) + 10px); }
+/* 有右栏的页面：夜里主栏一直铺到右栏左缘（不再留一道露出半张脸的缝），所以壁纸层上没有地方写署名——
+   一律写在右栏底部（StatusPanel 的 .status-panel__foot）：官方表情在前，壁纸开着再接「画面：AI 辅助同人图」；关了壁纸也只留官方表情那一句。 */
+.wallpaper:not([data-view="new"]):not([data-view="queue"]) .wallpaper__credit { display: none; }
+.app:not([data-view="new"]):not([data-view="queue"]) > .app__main { max-width: none; }
+.status-panel__foot { display: none; }
+:root[data-mode="night"] .status-panel__foot {
+  display: block;
+  flex: none;
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--line);
+}
+.status-panel__wall-credit {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 16px;
+  letter-spacing: 0.04em;
+  color: var(--text-3);
+}
+/* 署名分成块级行，各自 nowrap：第 1 行官方素材，第 2 行 AI 辅助的说明（只有壁纸开着才有）. */
+.status-panel__wall-credit-line { display: block; font-size: 11px; line-height: 16px; white-space: nowrap; }
+/* 昼：署名跟着她走——官方立绘只出现在拱窗里（首页/待你：DayStage；其余页：右栏顶部的拱窗），署名就写在拱窗里。 */
+:root[data-mode="day"] .wallpaper__credit { display: none; }
+
+:root[data-motion="reduced"] .wallpaper__layer,
+:root[data-motion="reduced"] .wallpaper__layer.is-active,
+:root[data-motion="reduced"] .alt-frame,
+:root[data-motion="reduced"] .wallpaper__frame,
+:root[data-motion="reduced"] .wallpaper__grade { transition: none; }
+
+/* ───────────── 昼：她的窗（首页与「待你」右半的拱窗） ─────────────
+   样稿 s1 的做法：尖拱窗里站着官方立绘，立绘只按原比例摆放（不变形、不改色、不翻转），**被拱窗的轮廓裁切**——
+   发尾停在窗内；拱窗有一圈白框、1 px 浅紫描边与底部点状紫色窗台。
+   窗的尺寸全部由 --ah（拱窗高度，tokens.css）推出，所以随窗口高度等比缩放；.app 在右侧留出 --arch-w 的位置。 */
+.daystage {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  z-index: 0;
+  width: var(--arch-w);
+  height: var(--ah);
+  pointer-events: none;
+}
+@media (max-width: 1179px) { .daystage { display: none; } }
+/* 拱窗外一圈白框（样稿 .frame） */
+.daystage::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1.5px solid rgb(255 255 255 / 0.7);
+  border-radius: calc(var(--arch-w) / 2 + 6px) calc(var(--arch-w) / 2 + 6px) 22px 22px;
+}
+.daystage__arch {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--arch-w) / 2) calc(var(--arch-w) / 2) 16px 16px;
+  background: linear-gradient(180deg, #e4dcf4 0%, #efe9f8 40%, #f8f4f8 72%, #e9e1f3 100%);
+  box-shadow: 0 14px 34px rgb(70 45 110 / 0.2);
+}
+/* 1 px 浅紫描边：盖在立绘之上，沿拱的轮廓 */
+.daystage__arch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(120 100 170 / 0.42);
+  pointer-events: none;
+}
+.daystage__pattern { position: absolute; inset: 0; background-image: var(--paper-pattern); background-size: 96px 96px; opacity: 0.5; mask-image: radial-gradient(ellipse at 56% 45%, transparent 26%, #000 88%); }
+.daystage__halo {
+  position: absolute;
+  left: calc(var(--ah) * 0.1964);
+  top: calc(var(--ah) * 0.2442);
+  width: calc(var(--ah) * 0.3503);
+  height: calc(var(--ah) * 0.3503);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(255 255 255 / 0.95) 0, rgb(255 255 255 / 0.72) 62%, rgb(205 193 233 / 0) 100%);
+  box-shadow: 0 0 0 1.5px rgb(154 133 200 / 0.32), 0 0 0 9px rgb(255 255 255 / 0.3);
+}
+.daystage__fig {
+  position: absolute;
+  left: calc(var(--ah) * -0.4268);
+  top: calc(var(--ah) * -0.0849);
+  width: calc(var(--ah) * 1.0531);
+  height: auto;
+  max-width: none;
+  user-select: none;
+}
+/* 脚下的白花海：先铺一层，再把立绘的下缘羽化进去，不留硬切 */
+.daystage__flowers {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 17%;
+  background-size: cover;
+  background-position: center bottom;
+  opacity: 0.88;
+  mask-image: linear-gradient(0deg, #000 0, rgb(0 0 0 / 0.8) 40%, transparent 100%);
+}
+/* 底部点状紫色窗台 */
+.daystage__hem, .status-panel__hem {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 9px;
+  background: var(--hem-img) repeat-x 0 0 / 30px 9px;
+}
+.daystage__credit {
+  position: absolute;
+  right: 20px;
+  bottom: 22px;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgb(255 254 251 / 0.82);
+  color: var(--text-2);
+  font-size: 11.5px;
+  line-height: 18px;
+  text-shadow: none;
+}
+
+/* ───────────── 夜：壁纸关掉时她的窗（首页与「待你」右半，NightStage） ─────────────
+   与昼的 .daystage 同一个版式与几何（同一张官方立绘，被拱窗的轮廓裁切、不变形、不改色），只把配色换成夜的令牌：
+   拱框 1 px var(--her-line)，底是一层深紫 + 紫色径向光，立绘后面一圈柔光，窗台还是点状紫边；署名「立绘：官方 © miHoYo」写在窗里。 */
+.nightstage { position: fixed; right: 12px; top: 12px; z-index: 0; width: var(--arch-w); height: var(--ah); pointer-events: none; }
+@media (max-width: 1179px) { .nightstage { display: none; } }
+.nightstage::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px solid var(--her-line);
+  border-radius: calc(var(--arch-w) / 2 + 6px) calc(var(--arch-w) / 2 + 6px) 22px 22px;
+}
+.nightstage__arch {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: calc(var(--arch-w) / 2) calc(var(--arch-w) / 2) 16px 16px;
+  background:
+    radial-gradient(circle at 50% 38%, rgb(124 76 163 / 0.28), transparent 62%),
+    linear-gradient(180deg, #1b1533 0%, #151028 52%, #1d1638 100%);
+  box-shadow: 0 14px 34px rgb(4 2 14 / 0.5);
+}
+.nightstage__arch::after { content: ""; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px var(--her-line); pointer-events: none; }
+.nightstage__halo {
+  position: absolute;
+  left: calc(var(--ah) * 0.1964);
+  top: calc(var(--ah) * 0.2442);
+  width: calc(var(--ah) * 0.3503);
+  height: calc(var(--ah) * 0.3503);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgb(214 190 226 / 0.2) 0, rgb(160 120 200 / 0.12) 62%, transparent 100%);
+  box-shadow: 0 0 0 1px rgb(214 190 226 / 0.18);
+}
+.nightstage__fig {
+  position: absolute;
+  left: calc(var(--ah) * -0.4268);
+  top: calc(var(--ah) * -0.0849);
+  width: calc(var(--ah) * 1.0531);
+  height: auto;
+  max-width: none;
+  user-select: none;
+}
+.nightstage__hem { position: absolute; left: 0; right: 0; bottom: 0; height: 9px; background: var(--hem-img) repeat-x 0 0 / 30px 9px; }
+.nightstage__credit {
+  position: absolute;
+  right: 20px;
+  bottom: 22px;
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: rgb(20 15 36 / 0.78);
+  color: var(--text-2);
+  font-size: 11.5px;
+  line-height: 18px;
+  text-shadow: none;
+}
+/* 夜 · 无壁纸：.app 右侧给拱窗留位置（同昼），内容列不压在窗上；窄于 1180 时窗收起，列照旧。 */
+@media (min-width: 1180px) {
+  :root[data-mode="night"][data-wallpaper="off"] .app[data-view="new"],
+  :root[data-mode="night"][data-wallpaper="off"] .app[data-view="queue"] { padding-right: calc(var(--arch-w) + 20px); }
+}
+
+/* 开屏的版式在 boot.css（由 BootSplash 引入）。 */

@@ -1,0 +1,47 @@
+/* 设置 › 数据（V0α · 模块 B2「存储」）。只用语义令牌；令牌还没定义时用回退值。 */
+
+.sd-path {
+  margin: 4px 0 0;
+  font-family: var(--font-mono, ui-monospace, Consolas, monospace);
+  font-size: var(--fs-xs, 12px);
+  color: var(--text-2, inherit);
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+span.sd-path { margin: 0; }
+.sd-meta { margin: 4px 0 0; font-size: var(--fs-xs, 12px); color: var(--text-3, #8b8fa3); }
+.sd-meta strong { margin-left: var(--sp-2, 8px); color: var(--tone-warning, #f2c879); font-weight: 600; }
+.sd-meta > span + span::before { content: "·"; margin: 0 var(--sp-2, 8px); }
+
+.sd-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2, 8px); }
+.sd-actions--row { margin-top: var(--sp-2, 8px); }
+.sd-callout .sd-actions { margin-top: var(--sp-2, 8px); }
+
+/* 磁盘剩余 */
+.sd-disk { margin-top: var(--sp-2, 8px); max-width: 420px; }
+.sd-disk__bar { height: 6px; border-radius: 3px; background: var(--surface-sunken, rgb(255 255 255 / 0.08)); overflow: hidden; }
+.sd-disk__bar > span { display: block; height: 100%; border-radius: 3px; background: var(--accent, var(--mint, currentColor)); }
+.sd-disk__bar > span[data-low] { background: var(--tone-warning, #f2c879); }
+
+/* 提示框（低空间、确认更改） */
+.sd-callout {
+  margin-top: var(--sp-3, 12px);
+  padding: var(--sp-2, 8px) var(--sp-3, 12px);
+  border: 1px solid var(--line, rgb(255 255 255 / 0.12));
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-sunken, transparent);
+  font-size: var(--fs-sm, 13px);
+  color: var(--text-2, inherit);
+}
+.sd-callout p { margin: 0; }
+.sd-callout--warn { border-color: var(--tone-warning, #f2c879); }
+
+/* 最近的备份 */
+.sd-list { list-style: none; margin: var(--sp-3, 12px) 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-xs, 12px); color: var(--text-3, #8b8fa3); }
+.sd-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--sp-3, 12px); align-items: baseline; padding: 2px 0; font-variant-numeric: tabular-nums; }
+
+/* 结果说明 */
+.sd-note { margin: var(--sp-3, 12px) 0 0; font-size: var(--fs-sm, 13px); overflow-wrap: anywhere; }
+.sd-note--ok { color: var(--tone-success, #a6ec7a); }
+.sd-note--warn { color: var(--tone-warning, #f2c879); }
+.sd-note--bad { color: var(--tone-danger, #ff8b7b); }

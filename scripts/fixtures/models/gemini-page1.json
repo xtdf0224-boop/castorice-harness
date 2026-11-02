@@ -1,0 +1,28 @@
+{
+ "models": [
+  {
+   "name": "models/gemini-4-argon",
+   "displayName": "Gemini 4 Argon",
+   "inputTokenLimit": 1048576,
+   "outputTokenLimit": 65536,
+   "supportedGenerationMethods": [
+    "generateContent",
+    "countTokens"
+   ]
+  },
+  {
+   "name": "models/gemini-4-argon-image",
+   "inputTokenLimit": 1000,
+   "supportedGenerationMethods": [
+    "generateContent"
+   ]
+  },
+  {
+   "name": "models/text-embedding-5",
+   "supportedGenerationMethods": [
+    "embedContent"
+   ]
+  }
+ ],
+ "nextPageToken": "tok-2"
+}

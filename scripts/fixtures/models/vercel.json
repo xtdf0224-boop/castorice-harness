@@ -1,0 +1,32 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "anthropic/claude-sonnet-5-5",
+   "object": "model",
+   "type": "language",
+   "context_window": 1000000,
+   "max_tokens": 128000,
+   "tags": [
+    "tool-use",
+    "vision",
+    "reasoning"
+   ]
+  },
+  {
+   "id": "openai/text-embedding-4",
+   "object": "model",
+   "type": "embedding"
+  },
+  {
+   "id": "google/gemini-3.5-flash-lite",
+   "object": "model",
+   "type": "language",
+   "context_window": 1048576,
+   "tags": [
+    "tool-use"
+   ],
+   "deprecated_at": "2026-12-01"
+  }
+ ]
+}

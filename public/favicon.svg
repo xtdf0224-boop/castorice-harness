@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <defs>
+    <linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#62cdf0"/><stop offset=".55" stop-color="#6f9aee"/><stop offset="1" stop-color="#7a63e0"/></linearGradient>
+    <linearGradient id="plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2150"/><stop offset=".55" stop-color="#1b1730"/><stop offset="1" stop-color="#0e0c19"/></linearGradient>
+    <g id="w">
+      <path d="M20 15.2C17.2 7.2 9.6 2 4.6 4.2 2 5.5 2.6 10.8 7.2 15.4c3.5 3 8 2.4 12.8-.2z"/>
+      <path d="M20 16.6C14.9 16.8 9 19.2 8.8 24c-.1 4.4 4.2 5.8 7.2 3.2 2.6-2.3 3.5-6.6 4-10.6z"/>
+      <path transform="translate(40 0) scale(-1 1)" d="M20 15.2C17.2 7.2 9.6 2 4.6 4.2 2 5.5 2.6 10.8 7.2 15.4c3.5 3 8 2.4 12.8-.2z"/>
+      <path transform="translate(40 0) scale(-1 1)" d="M20 16.6C14.9 16.8 9 19.2 8.8 24c-.1 4.4 4.2 5.8 7.2 3.2 2.6-2.3 3.5-6.6 4-10.6z"/>
+    </g>
+  </defs>
+  <rect x="1" y="1" width="46" height="46" rx="11" fill="url(#plate)"/>
+  <path d="M5.5 38C12 36 18 38 25 35.2 30 33 34 30.2 40 25" fill="none" stroke="#d6d0ee" stroke-width="1.7" stroke-linecap="round"/>
+  <g transform="translate(14.2 8.6) rotate(-14 12.4 16.7) scale(.76)">
+    <g stroke="#1b1e52" stroke-width="2.4" stroke-linejoin="round" fill="url(#gb)"><use href="#w"/></g>
+    <path d="M20 9.6v17.4" stroke="#1b1e52" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+</svg>

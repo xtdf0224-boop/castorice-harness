@@ -1,0 +1,409 @@
+{
+  "generated_by": "scripts/gen-installer-art.py",
+  "scale": 2,
+  "sources": {
+    "figure": {
+      "path": "public/art/figure-official.webp",
+      "px": [
+        1181,
+        1600
+      ],
+      "mode": "RGBA",
+      "sha256": "035117103989b3787281433c03aadf360900e235b868ca1b71afc9ed45e5549d"
+    },
+    "splash": {
+      "path": "public/art/splash-official.webp",
+      "px": [
+        1600,
+        1600
+      ],
+      "mode": "RGBA",
+      "sha256": "00474bbe7e46830e77ccd77a283b6ae3c793b6561bd6ee4f8b0775490d6d068f"
+    },
+    "face": {
+      "path": "public/art/her/face-gentle.webp",
+      "px": [
+        527,
+        527
+      ],
+      "mode": "RGB",
+      "sha256": "bf57447f40ec97f7f31061e41a38e58293997a4c5d54aa510040dcf7b1c394b8"
+    },
+    "night": {
+      "path": "public/wallpapers/night-2560.webp",
+      "px": [
+        2560,
+        1440
+      ],
+      "mode": "RGB",
+      "sha256": "30feca283a9582018f61490f59f78e789f4faad8e6acd898865037412dd98dff"
+    }
+  },
+  "outputs": {
+    "welcome.bmp": {
+      "px": [
+        1440,
+        864
+      ],
+      "bytes": 3732534,
+      "expected_bytes": 3732534,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "458781e134bebd2dfe0fd2ccaf526bac57d8cfcf096d203c0b8af553d9d5b428"
+    },
+    "finish.bmp": {
+      "px": [
+        1440,
+        864
+      ],
+      "bytes": 3732534,
+      "expected_bytes": 3732534,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "aecae0b2024995b882520d269b78ba1d2813b2b26d71c1b5f25790b71ac16300"
+    },
+    "header.bmp": {
+      "px": [
+        1440,
+        128
+      ],
+      "bytes": 553014,
+      "expected_bytes": 553014,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "e8e6580824a3b4e0752471cf586479eac0a88cb120144b8a50b2c6cf0459c83f"
+    },
+    "band.bmp": {
+      "px": [
+        1440,
+        320
+      ],
+      "bytes": 1382454,
+      "expected_bytes": 1382454,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "aa529255b07870a6814830d0d9ab55161dba831ef9caf76c7c347311f7106230"
+    },
+    "un_welcome.bmp": {
+      "px": [
+        1440,
+        864
+      ],
+      "bytes": 3732534,
+      "expected_bytes": 3732534,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "07f4021bed194f2b31302fc08b46fa818c199089b2ee5dadfbbdf441f4b42428"
+    },
+    "un_done_keep.bmp": {
+      "px": [
+        1440,
+        864
+      ],
+      "bytes": 3732534,
+      "expected_bytes": 3732534,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "9915971443510f7da4cfaeba548e31188b9c3a5f19c790237d07a515e220d64f"
+    },
+    "un_done_drop.bmp": {
+      "px": [
+        1440,
+        864
+      ],
+      "bytes": 3732534,
+      "expected_bytes": 3732534,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "17cf8bfe95083d3a6b7517498b34a5636aa2c4c9a955ffbb0c2c9663bd0671b0"
+    },
+    "choose_keep.bmp": {
+      "px": [
+        432,
+        560
+      ],
+      "bytes": 725814,
+      "expected_bytes": 725814,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "4da897788061cb45db86757ba2a6601849d2d6ab33bf5da9565769c19b80d11d"
+    },
+    "choose_drop.bmp": {
+      "px": [
+        432,
+        560
+      ],
+      "bytes": 725814,
+      "expected_bytes": 725814,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "6ed150e3a264105ccc1c911b8415e9bd7593008e22b52e87d8ae6095f2680484"
+    },
+    "twig.bmp": {
+      "px": [
+        120,
+        380
+      ],
+      "bytes": 136854,
+      "expected_bytes": 136854,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "fad500fd9cee5fbddc1ae73045ff813348bee9f2ce107c224d05df0e324242c1"
+    },
+    "warn_gold.bmp": {
+      "px": [
+        36,
+        36
+      ],
+      "bytes": 3942,
+      "expected_bytes": 3942,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "45075f1a2d99c765d49a3633dfe5ba2dbce12dacda66b1b6105266c642d5cfdb"
+    },
+    "warn_ink.bmp": {
+      "px": [
+        24,
+        24
+      ],
+      "bytes": 1782,
+      "expected_bytes": 1782,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "9f50c54e0785265d0eb28217cf8369ea7b93411aa66fb659a305bad5787684fb"
+    },
+    "stub.bmp": {
+      "px": [
+        16,
+        16
+      ],
+      "bytes": 822,
+      "expected_bytes": 822,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "4afec79abf02a0ece0ccff568fd3222757d76ffa398313cccecd9843bee337d3"
+    },
+    "portable-splash.bmp": {
+      "px": [
+        900,
+        600
+      ],
+      "bytes": 1620054,
+      "expected_bytes": 1620054,
+      "bpp": 24,
+      "compression": "BI_RGB",
+      "header_bytes": 40,
+      "bottom_up": true,
+      "sha256": "295af7ff05ea60ddcfaae6c7fbdcfb4f608c9837c778a44ca3541753d54db196"
+    }
+  },
+  "official": [
+    {
+      "page": "header.bmp",
+      "kind": "face",
+      "displayed_px": 112,
+      "placed_at_px": [
+        32,
+        8
+      ],
+      "natural_crop_px": 390,
+      "note": "显示像素 112 来自 390 px 取景框，未放大"
+    },
+    {
+      "page": "welcome.bmp",
+      "kind": "figure",
+      "displayed_px": [
+        567,
+        768
+      ],
+      "placed_at_px": [
+        792,
+        40
+      ],
+      "natural_px": [
+        1181,
+        1600
+      ],
+      "scale": 0.4801,
+      "alpha_weighted_mean_rgb_src": [
+        151.88,
+        124.58,
+        172.5
+      ],
+      "alpha_weighted_mean_rgb_out": [
+        151.81,
+        124.57,
+        172.48
+      ],
+      "max_mean_diff": 0.069,
+      "opaque_only_mean_rgb_src": [
+        154.24,
+        126.32,
+        174.39
+      ],
+      "opaque_only_mean_rgb_out": [
+        155.66,
+        127.62,
+        175.44
+      ],
+      "opaque_pixels_identical_to_resized_source": true,
+      "whole_image_placed": true,
+      "src_top_row_max_alpha": 7
+    },
+    {
+      "page": "finish.bmp",
+      "kind": "splash",
+      "displayed_px": [
+        800,
+        800
+      ],
+      "placed_at_px": [
+        640,
+        32
+      ],
+      "natural_px": [
+        1600,
+        1600
+      ],
+      "scale": 0.5,
+      "alpha_weighted_mean_rgb_src": [
+        126.17,
+        127.48,
+        154.47
+      ],
+      "alpha_weighted_mean_rgb_out": [
+        125.93,
+        127.27,
+        154.18
+      ],
+      "max_mean_diff": 0.288,
+      "opaque_only_mean_rgb_src": [
+        135.76,
+        133.54,
+        159.87
+      ],
+      "opaque_only_mean_rgb_out": [
+        136.23,
+        133.96,
+        160.14
+      ],
+      "opaque_pixels_identical_to_resized_source": true,
+      "whole_image_placed": true,
+      "src_top_row_max_alpha": 0
+    },
+    {
+      "page": "un_welcome.bmp",
+      "kind": "face",
+      "displayed_px": 224,
+      "placed_at_px": [
+        72,
+        72
+      ],
+      "natural_crop_px": 390,
+      "note": "显示像素 224 来自 390 px 取景框，未放大"
+    },
+    {
+      "page": "un_done_keep.bmp",
+      "kind": "face",
+      "displayed_px": 112,
+      "placed_at_px": [
+        56,
+        48
+      ],
+      "natural_crop_px": 390,
+      "note": "显示像素 112 来自 390 px 取景框，未放大"
+    },
+    {
+      "page": "un_done_drop.bmp",
+      "kind": "face",
+      "displayed_px": 112,
+      "placed_at_px": [
+        56,
+        48
+      ],
+      "natural_crop_px": 390,
+      "note": "显示像素 112 来自 390 px 取景框，未放大"
+    },
+    {
+      "page": "portable-splash.bmp",
+      "kind": "figure",
+      "displayed_px": [
+        399,
+        540
+      ],
+      "placed_at_px": [
+        445,
+        30
+      ],
+      "natural_px": [
+        1181,
+        1600
+      ],
+      "scale": 0.3378,
+      "alpha_weighted_mean_rgb_src": [
+        151.88,
+        124.58,
+        172.5
+      ],
+      "alpha_weighted_mean_rgb_out": [
+        151.97,
+        124.72,
+        172.69
+      ],
+      "max_mean_diff": 0.191,
+      "opaque_only_mean_rgb_src": [
+        154.24,
+        126.32,
+        174.39
+      ],
+      "opaque_only_mean_rgb_out": [
+        156.81,
+        128.6,
+        176.33
+      ],
+      "opaque_pixels_identical_to_resized_source": true,
+      "whole_image_placed": true,
+      "src_top_row_max_alpha": 7
+    }
+  ],
+  "checks": {
+    "night_crops_only_u_lt_0.43": true,
+    "text_panel_solid_asserts": "welcome / finish / un_welcome / un_done_keep / un_done_drop 的文字控件矩形逐值等于板色（脚本内 assert）",
+    "band_bottom_equals_PAGE": true,
+    "header_solid_outside_chip": true,
+    "contrast_vs_AL_BG": {
+      "TEXT2": 13.12,
+      "ACCENT": 11.84,
+      "TITLE": 15.97,
+      "TEXT3": 10.05
+    },
+    "portable_baked_text_px": 14,
+    "total_bmp_bytes": 23813220
+  }
+}

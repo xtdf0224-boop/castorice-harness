@@ -1,0 +1,88 @@
+/* 栖枝 · 安全模块的样式（B5）：信任确认框与「设置 › 信任的目录」。
+   只用语义令牌（夜/昼两套都由 B1 的 tokens.css 定义）；带回退值，令牌缺失时也不会破版。 */
+
+/* ───────────── 确认框 ───────────── */
+
+.trust-dialog { display: grid; gap: var(--sp-3, 12px); max-width: 560px; }
+
+.trust-dialog__lead {
+  margin: 0;
+  font-family: var(--font-serif, serif);
+  font-size: var(--fs-lg, 16px);
+  line-height: 1.7;
+  color: var(--text, #f4f0f7);
+  text-wrap: pretty;
+}
+
+.trust-dialog__subject {
+  display: grid;
+  gap: var(--sp-1, 4px);
+  padding: var(--sp-3, 12px);
+  border: 1px solid var(--line, rgb(214 190 226 / 0.16));
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-sunken, rgb(10 9 19 / 0.6));
+}
+.trust-dialog__path {
+  margin: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: var(--fs-sm, 13px);
+  color: var(--text, #f4f0f7);
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+.trust-dialog__scope { margin: 0; font-size: var(--fs-sm, 13px); color: var(--text-2, #d8cfe0); }
+
+.trust-dialog__options { display: grid; gap: var(--sp-2, 8px); margin: 0; }
+.trust-dialog__options > div { display: grid; grid-template-columns: 6.5em 1fr; gap: var(--sp-2, 8px); align-items: baseline; }
+.trust-dialog__options dt { font-weight: 600; color: var(--text, #f4f0f7); font-size: var(--fs-sm, 13px); }
+.trust-dialog__options dd { margin: 0; color: var(--text-2, #d8cfe0); font-size: var(--fs-sm, 13px); line-height: 1.6; }
+
+.trust-dialog__warn {
+  display: grid;
+  gap: var(--sp-2, 8px);
+  padding: var(--sp-3, 12px);
+  border: 1px solid var(--tone-warning, var(--gold, #e6c88a));
+  border-radius: var(--r-md, 10px);
+  background: var(--gold-soft, rgb(230 200 138 / 0.1));
+}
+.trust-dialog__warn-title { margin: 0; font-weight: 600; color: var(--gold, #e6c88a); font-size: var(--fs-sm, 13px); }
+.trust-dialog__warn ul { margin: 0; padding-left: 1.2em; display: grid; gap: var(--sp-1, 4px); color: var(--text, #f4f0f7); font-size: var(--fs-sm, 13px); line-height: 1.6; }
+.trust-dialog__ack { display: flex; gap: var(--sp-2, 8px); align-items: flex-start; font-size: var(--fs-sm, 13px); color: var(--text, #f4f0f7); cursor: pointer; }
+.trust-dialog__ack input { margin-top: 0.25em; accent-color: var(--accent, #d6c1e0); }
+
+.trust-dialog__error { margin: 0; color: var(--tone-danger, #f28ba3); font-size: var(--fs-sm, 13px); }
+.trust-dialog__wait { margin: 0; color: var(--text-3, #b7aac6); font-size: var(--fs-xs, 12px); }
+
+@media (max-width: 560px) {
+  .trust-dialog__options > div { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ───────────── 设置 › 信任的目录 ───────────── */
+
+.trust-section__intro { margin: 0 0 var(--sp-3, 12px); color: var(--text-2, #d8cfe0); font-size: var(--fs-sm, 13px); line-height: 1.7; }
+.trust-section__note { margin: var(--sp-2, 8px) 0 0; min-height: 1.4em; color: var(--text-2, #d8cfe0); font-size: var(--fs-sm, 13px); }
+
+.trust-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2, 8px); }
+.trust-list__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--sp-3, 12px);
+  align-items: center;
+  padding: var(--sp-3, 12px);
+  border: 1px solid var(--line, rgb(214 190 226 / 0.16));
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-sunken, rgb(10 9 19 / 0.6));
+}
+.trust-list__icon { color: var(--accent, #d6c1e0); }
+.trust-list__text { min-width: 0; display: grid; gap: 2px; }
+.trust-list__name { margin: 0; font-weight: 600; color: var(--text, #f4f0f7); font-size: var(--fs-md, 14px); }
+.trust-list__path { margin: 0; font-family: var(--font-mono, monospace); font-size: var(--fs-xs, 12px); color: var(--text-2, #d8cfe0); overflow-wrap: anywhere; }
+.trust-list__meta { margin: 0; display: flex; flex-wrap: wrap; gap: 2px var(--sp-3, 12px); font-size: var(--fs-xs, 12px); color: var(--text-3, #b7aac6); }
+.trust-list__level { color: var(--accent, #d6c1e0); }
+.trust-list__missing { color: var(--gold, #e6c88a); }
+.trust-list__empty { margin: 0; padding: var(--sp-3, 12px) 0; color: var(--text-2, #d8cfe0); font-size: var(--fs-sm, 13px); line-height: 1.7; }
+
+@media (max-width: 640px) {
+  .trust-list__row { grid-template-columns: auto 1fr; }
+  .trust-list__row > .btn { grid-column: 1 / -1; justify-self: end; }
+}

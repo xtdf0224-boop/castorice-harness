@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN" data-mode="night">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0e0c19" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>栖枝 · 遐蝶的 Agent 工作台</title>
+    <style>
+      /* 页面脚本、应用样式都还没跑的那一刻的底色（窗口要等页面第一帧好了才显示，一般看不到它）。
+         按 data-mode：main.tsx 第一行的 lib/earlyBoot.ts 会同步把它设成本机偏好里的主题，昼主题不会先闪一帧夜色。
+         :where() 的优先级为 0：应用样式（base.css 的 body 背景）一加载就接手. */
+      :where(html, body) { background: #0e0c19; }
+      :where(html[data-mode="day"], html[data-mode="day"] body) { background: #dcd5ee; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,187 @@
+{
+  "schema": 1,
+  "stub": false,
+  "theme": "day",
+  "width": 3210,
+  "height": 1530,
+  "fps": 60,
+  "frames": 445,
+  "scale": 1.53,
+  "extUnits": 2098,
+  "ratioMax": 2.0981,
+  "dpr": 1.5,
+  "cssWidth": 2140,
+  "cssHeight": 1020,
+  "duration": 7.4167,
+  "tEnd": 7.4,
+  "landing": 5,
+  "handoffPre": 7.15,
+  "handoffFadeMs": 120,
+  "ovPre": 1.4,
+  "ovFrom": 2.7,
+  "ovTo": 3,
+  "layers": "env+bloom-art",
+  "trc": "iec61966-2-1",
+  "matrix": "bt709",
+  "matrixTag": "unspecified",
+  "range": "tv",
+  "files": [
+    {
+      "role": "primary",
+      "path": "day-boot.avc.mp4",
+      "codec": "avc1.640034",
+      "bytes": 33165162,
+      "sha256": "607bed4b853752ae688daa615edc69bd9b4c469f4405087e6d5f53f4bc6cb9ef"
+    }
+  ],
+  "calibration": {
+    "note": "calibrate.py 在屏外真窗口（Intel 集显硬解，WGC = DWM 合成后的像素；capturePage = 合成器读回）里播同一帧标定图。显式标 bt709 矩阵：WGC 下红 -22、绿 +20、品红 -28（20-30 级色偏，AVC 另有灰阶整体 -3）；标 BT.601 + 601 系数：capturePage 正确但 WGC 仍偏；矩阵标记留空 + 709 系数：两条路径都在 2 级以内。trc 标 bt709 与 iec61966-2-1 输出逐位相同（硬解路径不看传递函数标记），取语义正确的 iec61966-2-1（源像素是 sRGB）。软解路径（--disable-accelerated-video-decode）在屏外窗口里抓不到视频，未标定。",
+    "measured": {
+      "hevc_none709_srgb": {
+        "wgc": {
+          "grayMeanAbs": 0.25,
+          "grayMax": 1,
+          "colorMeanAbs": 0.4,
+          "colorMax": 2
+        },
+        "capturePage": {
+          "grayMeanAbs": 1,
+          "grayMax": 2,
+          "colorMeanAbs": 1.15,
+          "colorMax": 2
+        }
+      },
+      "avc_none709_srgb": {
+        "wgc": {
+          "grayMeanAbs": 0.125,
+          "grayMax": 1,
+          "colorMeanAbs": 0.3,
+          "colorMax": 1
+        },
+        "capturePage": {
+          "grayMeanAbs": 0.125,
+          "grayMax": 1,
+          "colorMeanAbs": 0.3,
+          "colorMax": 1
+        }
+      },
+      "hevc_709tag_bt709": {
+        "wgc": {
+          "grayMeanAbs": 0.25,
+          "grayMax": 1,
+          "colorMeanAbs": 5,
+          "colorMax": 28
+        },
+        "capturePage": {
+          "grayMeanAbs": 1,
+          "grayMax": 2,
+          "colorMeanAbs": 5.717,
+          "colorMax": 28
+        }
+      },
+      "avc_709tag_bt709": {
+        "wgc": {
+          "grayMeanAbs": 1.542,
+          "grayMax": 3,
+          "colorMeanAbs": 6.133,
+          "colorMax": 31
+        },
+        "capturePage": {
+          "grayMeanAbs": 1.583,
+          "grayMax": 4,
+          "colorMeanAbs": 6.133,
+          "colorMax": 31
+        }
+      },
+      "hevc_601tag": {
+        "wgc": {
+          "grayMeanAbs": 0.25,
+          "grayMax": 1,
+          "colorMeanAbs": 5.183,
+          "colorMax": 39
+        },
+        "capturePage": {
+          "grayMeanAbs": 0.931,
+          "grayMax": 2,
+          "colorMeanAbs": 1.05,
+          "colorMax": 2
+        }
+      }
+    },
+    "mediaCapabilities": {
+      "supported": true,
+      "smooth": false,
+      "powerEfficient": true
+    }
+  },
+  "hash": {
+    "frame0_source_rgb": "1d55c41a61c0a2ba8c53f9ef70dabc2de5061ae88d25a65cdcbab9784c9cfa0b",
+    "frameLast_index": 444,
+    "frameLast_source_rgb": "0d1c763f9c0d9c466885f568f72d0c50bce7225a3a583275b24f6a8c859b2fde",
+    "frame0_decoded": {
+      "avc": "a9bb49eab08f729a474506864fa5ee7f292dfd1afc7c55f1ca34cd8291ff765b"
+    },
+    "frameLast_decoded": {
+      "avc": "3fb04c5134203629e342331f4e535c5e8ea7a2b6d36fee93de0ced10ccc5062b"
+    }
+  },
+  "sources": {
+    "splash": "00474bbe7e46830e77ccd77a283b6ae3c793b6561bd6ee4f8b0775490d6d068f",
+    "strip": "e245973e46e88c2fb63d9da1c9d40b500a5a87a8f035acac635028a9ada0d5a2",
+    "timeline": "dafa234287ce2887eca10f7774eead89c9568eac642303801f62780c53e656ca",
+    "src": "80d5299f483003f27aa9b874f610d4265e2ba695e0c151425eddbff11ae42d44",
+    "timelineJson": "{\"T_END\":7.4,\"DT\":{\"cam\":6,\"bloom\":[0,2.7],\"twig\":[1.3,4.4],\"thorn\":[1.1,2],\"glow\":2,\"dot\":[2.2,2.65],\"unfurl\":[2.4,2.9],\"fly\":[2.8,5]},\"DAY_EVENTS\":[[\"bloom\",0,2.7],[\"thorn\",1.1,2],[\"twig\",1.3,4.4],[\"birth\",2,2.9],[\"fly\",2.8,5]],\"DAY_VID\":{\"ovPre\":1.4,\"ovFrom\":2.7,\"ovTo\":3}}"
+  },
+  "nativeCheck": {
+    "splashMaxEdgePx": 2193.41,
+    "splashNative": 1600,
+    "stripMaxPxPerUnit": 1.8054,
+    "stripNativePxPerUnit": 1,
+    "artOverNative": [
+      {
+        "from": 0,
+        "to": 7.4,
+        "max": 1.3708799743652345
+      }
+    ],
+    "stripOverNative": [
+      {
+        "from": 0,
+        "to": 7.4,
+        "max": 1.805424576605696
+      }
+    ],
+    "note": "实测（native-check.mjs，t 每 0.05 s，scale = 设备像素 / 舞台单位）：立绘 = img.s0-art 的渲染边长；花海条 = day-strip.webp 的最大累计缩放（原图 1700 px 宽、舞台里画 1700 单位宽，即 1 px / 单位）。视频按显示分辨率渲染（scale 1.53 = 用户最大化窗口 1020 CSS 高 x DPR 1.5），帧里的显示尺寸与实时版在同一窗口里一致（同一舞台缩放 x 同一镜头），所以与实时版同样合规；实时版本身在这个窗口里就让立绘 / 花海条大于原图（见 artOverNative / stripOverNative），未改实时版。立绘在视频里只有 t < 3.0 s（绽开期）；2.7 s 起的清晰立绘是实时 DOM 层（不是视频）。",
+    "scaleTried": [
+      0.944,
+      0.846,
+      1.53
+    ]
+  },
+  "encode": {
+    "avc": {
+      "out": "G:/Claude Code Workplace/castorice-harness/perf-work/bootvideo/final-nt/day-boot.avc.mp4",
+      "codec": "avc",
+      "frames": 445,
+      "bytes": 33165162,
+      "mbps": 35.77,
+      "dither": 0.75,
+      "crf": 12,
+      "preset": "slow",
+      "trc": "iec61966-2-1",
+      "matrix": "none709",
+      "colr": false,
+      "chroma": "left",
+      "maxrate": 48000,
+      "bufsize": 96000,
+      "x265Extra": "",
+      "x264Extra": "",
+      "secs": 303
+    }
+  },
+  "made": {
+    "date": "2026-10-29T17:42:25.776Z",
+    "ffmpeg": "9.0.1",
+    "headCommit": "7dea895"
+  }
+}

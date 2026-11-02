@@ -1,0 +1,37 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "gpt-6.1-sol",
+   "object": "model",
+   "created": 1790000000,
+   "owned_by": "openai"
+  },
+  {
+   "id": "gpt-6-luna",
+   "object": "model",
+   "created": 1790000001,
+   "owned_by": "openai"
+  },
+  {
+   "id": "text-embedding-4-large",
+   "object": "model",
+   "owned_by": "openai"
+  },
+  {
+   "id": "whisper-2",
+   "object": "model",
+   "owned_by": "openai"
+  },
+  {
+   "id": "dall-e-5",
+   "object": "model",
+   "owned_by": "openai"
+  },
+  {
+   "id": "omni-moderation-2",
+   "object": "model",
+   "owned_by": "openai"
+  }
+ ]
+}

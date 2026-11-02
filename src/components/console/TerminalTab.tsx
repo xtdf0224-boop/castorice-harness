@@ -1,0 +1,96 @@
+/* 终端输出 tab: what the run's command-line agent ran and printed, plus the workbench's own notes. */
+import { Check, SquareTerminal } from 'lucide-react';
+import { memo, useMemo, useState, type ReactNode } from 'react';
+import { timeOfDay } from '../../lib/format';
+import type { TerminalLine } from '../../lib/types';
+import { useApp } from '../../state/store';
+import { Button, CopyButton, EmptyState } from '../ui';
+import '../../styles/store-long.css';
+import { useFollowScroll, useRemembered } from './consoleHooks';
+
+const EMPTY_LINES: TerminalLine[] = [];
+/** 一次最多画多少行（输出可以有几万行；更早的点「显示更早的」再加，也都还在存储里）. */
+const WINDOW = 1500;
+
+/** How the run's models work: a command-line agent runs commands, an API call only talks. */
+const NOTE = {
+  cli: '命令行 Agent 执行的命令与输出',
+  api: '这次运行通过 API 进行，不会执行命令；这里只显示系统消息',
+};
+
+export function TerminalTab({ runId }: { runId?: string }) {
+  const lines = useApp((s) => (runId ? s.runs[runId]?.terminal : undefined)) ?? EMPTY_LINES;
+  const running = useApp((s) => (runId ? s.runs[runId]?.status === 'running' : false));
+  const way = useApp((s): 'cli' | 'api' | undefined => {
+    const run = runId ? s.runs[runId] : undefined;
+    if (!run) return undefined;
+    const engines = [s.tasks[run.taskId]?.engine, ...Object.values(run.agentEngines ?? {})];
+    return engines.some((e) => e?.auth === 'cli') ? 'cli' : engines.some((e) => e?.auth === 'api') ? 'api' : undefined;
+  });
+
+  const [showTime, setShowTime] = useRemembered('term.time', false);
+  const scroll = useFollowScroll<HTMLDivElement>(lines.length);
+  const text = useMemo(() => lines.map((l) => l.text).join('\n'), [lines]);
+  const [limit, setLimit] = useState(WINDOW);
+  const shown = lines.length > limit ? lines.slice(lines.length - limit) : lines;
+  const hidden = lines.length - shown.length;
+
+  return (
+    <>
+      <div className="console__toolbar">
+        {way && <span className="console__note">{NOTE[way]}</span>}
+        <div className="console__toolbar-end">
+          <Toggle pressed={showTime} onToggle={() => setShowTime(!showTime)}>显示时间</Toggle>
+          <Toggle pressed={scroll.following} onToggle={() => scroll.setFollowing(!scroll.following)}>自动跟随</Toggle>
+          {lines.length > 0 && <CopyButton text={text} label="复制全部" />}
+        </div>
+      </div>
+
+      <div className="console__pane">
+        <div ref={scroll.ref} className="term" role="log" aria-live="off" aria-label="终端输出" tabIndex={0}
+          onScroll={scroll.onScroll} onClickCapture={scroll.onClickCapture}>
+          {lines.length > 0 ? (
+            <>
+              {hidden > 0 && (
+                <div className="cv-more-rows">
+                  <Button size="sm" variant="ghost" onClick={() => { scroll.setFollowing(false); setLimit((l) => l + WINDOW); }}>显示更早的 {Math.min(hidden, WINDOW)} 行（还有 {hidden} 行没画出来）</Button>
+                </div>
+              )}
+              <ol className="term__lines">
+                {shown.map((line) => <TermLineRow key={line.id} line={line} showTime={showTime} />)}
+              </ol>
+              {running && <div className="term__cursor-row" aria-hidden><span className="term__cursor" /></div>}
+            </>
+          ) : (
+            <EmptyState compact icon={SquareTerminal} title={runId ? '还没有终端输出' : '还没有运行'}
+              body={runId ? undefined : '开始一个任务后，命令输出会显示在这里。'} />
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+const TermLineRow = memo(function TermLineRow({ line, showTime }: { line: TerminalLine; showTime: boolean }) {
+  return (
+    <li className={`term__line term__line--${line.stream}`}>
+      {showTime && <time className="term__time" dateTime={new Date(line.at).toISOString()}>{timeOfDay(line.at)}</time>}
+      {/* A shape marker, so stderr is not told apart by colour alone. */}
+      <span className="term__gutter" aria-hidden>{line.stream === 'stderr' ? '!' : ''}</span>
+      <span className="term__text">
+        {line.stream === 'stderr' && <span className="sr-only">错误输出：</span>}
+        {line.text || ' '}
+      </span>
+    </li>
+  );
+});
+
+/** Checkbox-like toggle button: the tick tells the state, not just the colour. */
+function Toggle({ pressed, onToggle, children }: { pressed: boolean; onToggle: () => void; children: ReactNode }) {
+  return (
+    <button type="button" className="console-toggle" aria-pressed={pressed} onClick={onToggle}>
+      <span className="console-toggle__box" aria-hidden>{pressed && <Check size={11} strokeWidth={3} />}</span>
+      {children}
+    </button>
+  );
+}

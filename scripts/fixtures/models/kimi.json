@@ -1,0 +1,19 @@
+{
+ "object": "list",
+ "data": [
+  {
+   "id": "kimi-k3",
+   "object": "model",
+   "context_length": 1048576,
+   "supports_image_in": true,
+   "supports_reasoning": true
+  },
+  {
+   "id": "kimi-k2.7-code",
+   "object": "model",
+   "context_length": 262144,
+   "supports_image_in": false,
+   "supports_reasoning": true
+  }
+ ]
+}

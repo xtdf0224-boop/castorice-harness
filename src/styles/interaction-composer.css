@@ -1,0 +1,92 @@
+/* 栖枝 · 输入框「信封」（B4）：地址行「寄往 目录 · 引擎 · 手套」、航空信边、横线信纸、「发送」键.
+   只改首页的信封（.pbox--envelope）；任务页贴底的细长条沿用 B1 的 .pbox 样式.
+   令牌回退值是夜景样稿色，B1 的令牌到位前也能看. */
+
+.return-bottom .home-composer, .home-composer { width: 100%; max-width: none; min-width: 0; border: 0; padding: 0; margin: 0; }
+
+.pbox.pbox--envelope { gap: 7px; }
+.pbox--envelope .pbox__box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--r-lg, 12px);
+  background: var(--surface-raised, rgb(27 20 44 / 0.92));
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--line-strong, rgb(198 174 211 / 0.7)), 0 0 0 3px color-mix(in srgb, var(--accent, #c6aed3) 14%, transparent), 0 8px 22px rgb(0 0 0 / 0.28);
+}
+.pbox--envelope .pbox__box:focus-within { box-shadow: inset 0 0 0 1px var(--accent-strong, #efe3f3), 0 0 0 3px color-mix(in srgb, var(--accent, #c6aed3) 28%, transparent), 0 8px 22px rgb(0 0 0 / 0.28); animation: none; }
+
+/* 航空信边：藕紫与蓝蝶两色斜纹. */
+.pbox__stripe { flex: none; height: 4px; background: repeating-linear-gradient(135deg, var(--accent, #ad90b7) 0 9px, transparent 9px 14px, var(--blue, #7cc8f7) 14px 23px, transparent 23px 28px); }
+
+/* 地址行. */
+.pbox__addr {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  min-height: 34px;
+  padding: 4px 14px;
+  border-bottom: 1px solid var(--line, rgb(173 144 183 / 0.3));
+  font-size: 12.5px;
+  color: var(--text-2, #d8cfe0);
+}
+.env-label { font-family: var(--font-serif, "Noto Serif SC", serif); font-weight: 700; letter-spacing: 0.2em; color: var(--text-2, #d8cfe0); }
+.env-dot { color: var(--text-3, #b7aac6); }
+/* 地址行里的下拉芯片：不画框，用点状下划线，像信封上手写的收件人. */
+.pbox__addr .pchip, .pbox__addr .mselect-chip {
+  height: 22px; padding: 0 2px; border: 0; border-radius: 0; background: none; box-shadow: none;
+  border-bottom: 1px dotted var(--text-3, #b7aac6); color: var(--text, #f4f0f7); font-weight: 500; max-width: 15em;
+}
+.pbox__addr .pchip:hover, .pbox__addr .mselect-chip:hover { border-bottom-color: var(--text, #f4f0f7); background: var(--surface-hover, rgb(255 255 255 / 0.06)); }
+.pbox__addr .mselect__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pbox__addr .pchip--action { border-bottom-style: solid; color: var(--accent, #d6c1e0); }
+.env-kind.segmented { margin-left: auto; }
+
+/* 横线信纸. */
+.pbox--envelope .pbox__input {
+  min-height: 0;
+  padding: 3px 16px 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(to bottom, transparent 0, transparent 27px, color-mix(in srgb, var(--accent, #c6aed3) 16%, transparent) 27px, color-mix(in srgb, var(--accent, #c6aed3) 16%, transparent) 28px);
+  background-position: 0 4px;
+  font-size: var(--fs-lg, 15px);
+  line-height: 28px;
+  color: var(--text, #f4f0f7);
+  box-shadow: none;
+  resize: none;
+}
+.pbox--envelope .pbox__input::placeholder { color: var(--text-3, #b7aac6); }
+
+/* 底部：左边是「⋯」与一句说明，右边是「发送」. */
+.pbox--envelope .pbox__bar { align-items: center; gap: 8px; padding: 0 8px 0 10px; min-height: 38px; border-top: 1px solid var(--line, rgb(173 144 183 / 0.3)); }
+.pbox--envelope .pbox__chips { flex: 1; min-width: 0; font-size: 12px; color: var(--text-3, #b7aac6); }
+.env-more { width: 26px; height: 26px; padding: 0; justify-content: center; border-radius: var(--r-sm, 8px); }
+.env-foot-hint { display: inline-flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-3, #b7aac6); }
+.pbox--envelope .pbox__send {
+  width: auto; height: 28px; gap: 7px; padding: 0 13px 0 11px; border-radius: var(--r-sm, 8px);
+  display: inline-flex; align-items: center; background: var(--accent, #c6aed3); color: var(--on-accent, #1f1030); font-size: 13px; font-weight: 600; box-shadow: none; text-shadow: none;
+}
+.pbox--envelope .pbox__send:hover:not(:disabled) { background: var(--accent-strong, #efe3f3); transform: none; box-shadow: none; }
+.pbox--envelope .pbox__send:disabled { background: var(--surface-sunken, rgb(60 50 80 / 0.6)); color: var(--text-3, #b7aac6); }
+.pbox--envelope + .pbox__hint, .pbox--envelope .pbox__hint { text-align: left; padding: 0 4px; font-size: 12.5px; line-height: 1.6; color: var(--text-3, #b7aac6); }
+.pbox__hint .is-note { color: var(--gold, #e6c88a); }
+
+.home-composer.is-locked .pbox__box { opacity: 0.7; }
+
+/* 开屏后第一句（boot.c / boot.w）：输入框上方的一行，不进对话流；关掉角色口吻就没有. */
+.home-composer__boot { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; padding: 0 4px; font-family: var(--font-serif, "Noto Serif SC", serif); font-size: 13.5px; line-height: 1.7; color: var(--text-2, #d8cfe0); }
+.home-composer__boot img { flex: none; }
+
+/* 首页收起态（Composer collapsible）：只留一行输入框和「发送」，约 56 px；寄往 / 强度 / 手套等聚焦（点、敲键）之后再展开. */
+.home-composer--compact .pbox__addr,
+.home-composer--compact .pbox__chips,
+.home-composer--compact .pbox__hint { display: none; }
+.home-composer--compact .pbox--envelope .pbox__box { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.home-composer--compact .pbox__stripe { grid-column: 1 / -1; }
+.home-composer--compact .pbox--envelope .pbox__input { grid-column: 1; padding-block: 2px; }
+.home-composer--compact .pbox--envelope .pbox__bar { grid-column: 2; min-height: 0; padding: 0 10px 0 0; border-top: 0; }

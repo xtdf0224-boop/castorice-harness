@@ -1,0 +1,125 @@
+/* 栖枝 · 右栏里的她（施工图 §4.5，C2）：页头的龛、神色一路、控制卡「她在旁边」.
+   图片只用官方素材，整张不裁（HerAvatar full）：龛的拱形是外框装饰（边线 + 圆角），不是图片的裁切框；
+   龛及其任何祖先都不对图片做 overflow:hidden（D-03），图片距拱顶 ≥ 8%. 令牌见 tokens.css（--card-*、--ring-*）. */
+
+.status-panel__her.herpanel { flex: none; display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 16px 12px 12px; border-bottom: 1px solid var(--line); }
+.status-panel__her.herpanel[data-folded="true"], .status-panel__her.herpanel[data-persona="off"] { gap: 6px; padding: 12px 12px 10px; }
+
+/* 龛的外框：夜是 .status-panel__host，昼仍是既有的宿主 .status-panel__arch（含 data-credit="arch"）.
+   顶半径 ≤ 28 px 的圆角矩形 + 一圈描边；里面的图片是直角，所以冠刺外端不会被切. */
+.status-panel__host, .status-panel__arch { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.status-panel__host[data-folded="false"], .status-panel__arch[data-folded="false"] {
+  border-radius: 28px 28px 14px 14px;
+  background: var(--card-ground);
+  box-shadow: inset 0 0 0 1.5px var(--card-tan), 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent), 0 8px 18px rgb(0 0 0 / 0.22);
+}
+:root[data-mode="day"] .status-panel__arch[data-folded="false"] { box-shadow: inset 0 0 0 1.5px #b9a8dc, 0 0 0 2px #fff, 0 0 0 4px rgb(154 133 200 / 0.35), 0 8px 18px rgb(70 45 110 / 0.2); }
+
+.herpanel-niche { position: relative; display: flex; justify-content: center; padding: 50px 20px 12px; }
+.herpanel-niche[data-compact="true"] { padding: 34px 16px 10px; }
+.herpanel-niche [data-her-avatar] { position: relative; z-index: 1; }
+/* 收起：龛左上角 24 px 高的小按钮，图标加「收起」二字（与收起后的「展开」对称），aria-label=收起立绘. */
+.herpanel-niche__fold {
+  position: absolute; top: 8px; left: 8px; z-index: 3; display: inline-flex; align-items: center; gap: 2px; min-width: 24px; height: 24px; padding: 0 8px 0 6px; border: 0; border-radius: 12px;
+  background: color-mix(in srgb, var(--card-ground) 70%, transparent); color: var(--text-2); font: inherit; font-size: 11.5px; line-height: 1; box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; text-shadow: none; white-space: nowrap;
+}
+.herpanel-niche__fold:hover { color: var(--text); background: var(--surface-hover); }
+.herpanel-niche__fold:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* 龛内的装饰（不是图片的裁切框）：一圈浅拱线跟着龛的顶半径，顶上居中一只 16 px 的线框蝶. */
+.herpanel-niche__arch {
+  position: absolute; inset: 7px 7px 30% 7px; z-index: 0; pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--accent) 38%, transparent); border-bottom: 0; border-radius: 22px 22px 0 0;
+}
+.herpanel-niche__bf { position: absolute; top: 0; left: 50%; z-index: 2; display: grid; place-items: center; width: 20px; height: 20px; transform: translate(-50%, -45%); color: var(--accent-strong); pointer-events: none; }
+:root[data-mode="day"] .herpanel-niche__bf { color: #7c63b0; }
+/* 表情徽章：44 px（36 px 图标 + 4 px 描边）整个落在龛内右上，不悬出龛、不贴窗口上沿；连外圈金线共 ≤ 48 px. */
+.herpanel-niche__badge {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%;
+  background: linear-gradient(145deg, #6b4690, #3a2158);
+  box-shadow: 0 0 0 2px rgb(230 200 138 / 0.75), 0 4px 10px rgb(8 5 22 / 0.4);
+}
+
+/* 昼：署名在龛的底边条里，不压图片；点状窗台贴着龛底. */
+.status-panel__arch-credit {
+  position: static; align-self: flex-end; margin: 0 10px 12px; padding: 0 8px; border-radius: 8px;
+  background: rgb(255 254 251 / 0.82); color: var(--text-2); font-size: 11px; line-height: 16px; text-shadow: none; white-space: nowrap;
+}
+/* 收起时署名是名牌下面的一行小字，跟着名牌走，不另起一行. */
+.herpanel-row__text .status-panel__arch-credit { align-self: flex-start; margin: 4px 0 0; padding: 0; background: none; font-size: 11px; line-height: 14px; color: var(--text-3); opacity: 0.8; }
+.status-panel__arch[data-folded="false"] { padding-bottom: 6px; }
+.status-panel__arch[data-folded="false"] .status-panel__hem { border-radius: 0 0 14px 14px; }
+.status-panel__arch[data-folded="true"] .status-panel__hem { display: none; }
+.status-panel__arch[data-folded="true"] .status-panel__arch-credit { margin: 4px 0 0; align-self: flex-end; }
+.status-panel__arch[data-folded="true"] .herpanel-row__text .status-panel__arch-credit { margin: 4px 0 0; align-self: flex-start; }
+
+/* 收起 / 单行：HerAvatar 44（带角标）+ 名牌 + 神色词 +「展开」. */
+.herpanel-row { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.herpanel-row__text { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.herpanel-toggle {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; height: 24px; padding: 0 8px; border: 0; border-radius: 12px;
+  background: transparent; color: var(--text-2); font: inherit; font-size: 12px; box-shadow: inset 0 0 0 1px var(--line); cursor: pointer; text-shadow: none;
+}
+.herpanel-toggle:hover { color: var(--text); background: var(--surface-hover); }
+.herpanel-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 展开时龛下面：名牌（含副标与神色词）、AI 辅助角色小标、运行状态. */
+.herpanel-info { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 0 2px; }
+.herpanel-info__line { display: flex; flex-wrap: nowrap; align-items: center; gap: 6px 8px; width: 100%; min-width: 0; }
+.herpanel-info__line .hnp__word { flex: 0 1 auto; min-width: 0; }
+
+/* 神色一路：闲聊 = 32 px 官方图标 + 11.5 px 神色词一排，没选中的 .8（不再是 .45），当前一个套运行状态外环. */
+.trail-icons { display: flex; align-items: flex-start; gap: 4px; margin: 0; padding: 2px 0; list-style: none; }
+.trail-icons li { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.trail-icons__ico { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; opacity: 0.8; }
+.trail-icons__label { max-width: 100%; font-size: 11.5px; line-height: 16px; color: var(--text-3); white-space: nowrap; }
+.trail-icons li.is-now .trail-icons__ico { opacity: 1; box-shadow: 0 0 0 2px var(--ring-idle); }
+.trail-icons li.is-now .trail-icons__label { color: var(--text); font-weight: var(--fw-semibold); }
+.trail-icons[data-ring="work"] li.is-now .trail-icons__ico { box-shadow: 0 0 0 2px var(--ring-work); }
+.trail-icons[data-ring="wait"] li.is-now .trail-icons__ico { box-shadow: 0 0 0 2px var(--ring-wait); }
+.trail-now { margin: 6px 0 0; font-size: 12.5px; color: var(--text-3); }
+.trail-now b { font-weight: var(--fw-semibold); color: var(--text-2); }
+
+/* 工作：每个节点是 36 px HerAvatar（脸 + 角标，当前一个带运行状态环）+ 12.5 px 标签 + 等宽时间（施工图 §4.5）. */
+.trail-nodes { display: flex; flex-direction: column; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.trail-nodes li { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.trail-nodes__ico { display: grid; place-items: center; width: 42px; height: 40px; opacity: 0.9; }
+.trail-nodes li.is-now .trail-nodes__ico { opacity: 1; }
+.trail-nodes__label { font-size: 12.5px; color: var(--text-2); }
+.trail-nodes__time { font-size: 12px; color: var(--text-3); }
+.trail-nodes li.is-now .trail-nodes__label { color: var(--text); font-weight: var(--fw-semibold); }
+
+/* 控制卡：她在旁边 */
+.herctl { display: flex; flex-direction: column; gap: 10px; }
+.herctl__row { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.herctl__k { font-size: 13px; color: var(--text); }
+.herctl__k small { display: block; margin-top: 1px; font-size: 12px; line-height: 1.5; color: var(--text-3); text-wrap: pretty; }
+.herctl__lock { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: 13px; font-size: 12px; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--line); }
+.herctl__btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.status-panel__section--ctl .switch-row { padding: 0; }
+.status-panel__section--ctl .switch-row__label { font-size: 13px; }
+.status-panel__section--ctl .switch-row__desc { margin-top: 1px; font-size: 12px; line-height: 1.5; color: var(--text-3); text-wrap: pretty; }
+/* 说明文字是整行的，别让开关把它挤窄、最后一个字掉到下一行. */
+/* 开关行：标题与说明都在左列（说明紧贴标题，同分段控件那种行的节奏），开关占右列、垂直居中. */
+.status-panel__section--ctl .switch-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 2px; align-items: center; }
+.status-panel__section--ctl .switch-row__text { display: contents; }
+.status-panel__section--ctl .switch-row__label { grid-column: 1; grid-row: 1; }
+.status-panel__section--ctl .switch-row .switch { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+.status-panel__section--ctl .switch-row__desc { grid-column: 1; grid-row: 2; margin-top: 0; }
+.status-panel__section--ctl .switch-row__text:not(:has(.switch-row__desc)) + .switch { grid-row: 1; }
+
+.status-panel :is(.status-panel__muted, .status-panel__note, .status-panel__step, .status-panel__model) { text-wrap: pretty; }
+
+/* 步骤条（StatusPanel 的 StepBar）：一段一步，按这一步自己的状态上色——已完成 淡绿、失败的那一步 红、当前 流光、未执行 灰；
+   放下之后整条灰阶（.is-laid）：完成段是淡灰、没做的是更淡的灰，不再出现强调色. */
+.stepbar { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; height: 6px; }
+.stepbar__seg { border-radius: 3px; background: rgb(var(--hair-rgb) / 0.2); }
+.stepbar__seg.is-done { background: color-mix(in srgb, var(--tone-success) 62%, transparent); }
+.stepbar__seg.is-skip { background: rgb(var(--hair-rgb) / 0.45); }
+.stepbar__seg.is-failed { background: var(--tone-danger); box-shadow: 0 0 6px -1px color-mix(in srgb, var(--tone-danger) 55%, transparent); }
+.stepbar__seg.is-now { background: linear-gradient(90deg, var(--river-a), var(--river-c)); box-shadow: 0 0 6px -1px color-mix(in srgb, var(--river-c) 55%, transparent); }
+.stepbar.is-laid .stepbar__seg { box-shadow: none; }
+.stepbar.is-laid .stepbar__seg.is-done, .stepbar.is-laid .stepbar__seg.is-skip, .stepbar.is-laid .stepbar__seg.is-now { background: rgb(var(--hair-rgb) / 0.5); }
+.stepbar.is-laid .stepbar__seg.is-idle { background: rgb(var(--hair-rgb) / 0.18); }
+.herctl__nb { display: inline-block; white-space: nowrap; }
+.status-panel__ln { display: block; white-space: nowrap; }

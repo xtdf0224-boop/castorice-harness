@@ -1,0 +1,646 @@
+/* Shell region: left navigation, right status panel, approval card, toasts and dialog hosts.
+   Everything reads tokens. Class prefixes: .side-nav · .status-panel · .toast · .shell-* */
+
+/* ───────────── shared ───────────── */
+
+/* 外壳整页不滚动，只让里面的面板滚：根节点被 scrollIntoView / 聚焦滚动一下，整个外壳会上移 16–30 px（logo 被切、底部露出壁纸）.
+   html / body 是 hidden；#root 用 clip——clip 不是滚动容器，程序也滚不动它. 窄屏（< 640）整页自己滚，这里不管. */
+@media (min-width: 640px) {
+  html, body { overflow: hidden; }
+  #root { overflow: clip; }
+}
+
+/* Text-style button used for "task title" links inside cards and panels. */
+.shell-link {
+  display: inline-block;
+  max-width: 100%;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  vertical-align: bottom;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-size: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent-line);
+  text-underline-offset: 3px;
+  border-radius: 2px;
+}
+.shell-link:hover { color: var(--accent-strong); text-decoration-color: currentColor; }
+
+.shell-dialog-subject { color: var(--text); font-weight: var(--fw-medium); overflow-wrap: anywhere; }
+
+/* ───────────── side nav ───────────── */
+/* 贴边、整高的一栏薄烟玻璃；选中项是发色渐变的细竖条（银白 → 藕紫 → 深紫）。 */
+
+.side-nav {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 12px 10px;
+  background: rgb(var(--glass-rgb) / calc(var(--glass-a, 0.5) + 0.1));
+  backdrop-filter: blur(calc(var(--blur) * 1.4)) saturate(1.1);
+  box-shadow: inset -1px 0 0 var(--line);
+}
+/* 开屏转场里空面板的薰衣草光（夜）：z-index −1 的色块盖在面板底色之上、内容之下，opacity 由转场的 WAAPI 驱动（boot/transitionNight.ts）；只在开屏期间存在 */
+:root[data-boot="on"] .side-nav::after { content: ""; position: absolute; inset: 0; z-index: -1; background: rgb(156 138 214); opacity: 0; pointer-events: none; }
+:root[data-wallpaper="off"] .side-nav { background: var(--solid); backdrop-filter: none; }
+:root[data-mode="day"] .side-nav {
+  background: rgb(255 255 255 / 0.1);
+  backdrop-filter: none;
+  box-shadow: none;
+  /* 昼的左栏坐在薰衣草底上：字用更深的一档（对比度 ≥ 4.5），金也深一档 */
+  --text: #2a1b40;
+  --text-2: #33264b;
+  --text-3: #44365d;
+  --gold: #5c3500;
+  --tone-warning: #5c3500;
+}
+
+.side-nav__top { display: flex; flex-direction: column; gap: 0; flex: none; }
+.side-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0 4px 14px;
+  text-align: left;
+  border-radius: 10px;
+}
+.side-nav__brandtext { display: flex; flex-direction: column; min-width: 0; white-space: nowrap; }
+.side-nav__name { font: 600 19px/22px var(--font-serif); letter-spacing: 0.14em; color: var(--text); }
+.side-nav__sub { margin-top: 1px; font: 500 10.5px/14px var(--font-display); letter-spacing: 0.34em; color: var(--text-3); }
+:root[data-mode="day"] .side-nav__name { color: #2a1b40; }
+:root[data-mode="day"] .side-nav__sub { color: #3d2760; }
+
+.side-nav__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  border: 1px solid rgb(173 144 183 / 0.75);
+  border-radius: 10px;
+  color: var(--accent-strong);
+  font-weight: var(--fw-medium);
+  font-size: 13.5px;
+  letter-spacing: 0.04em;
+  background: rgb(var(--veil-rgb) / 0.3);
+  transition: background var(--dur-1) var(--ease), border-color var(--dur-1) var(--ease);
+}
+.side-nav__cta:hover { background: rgb(var(--accent-rgb) / 0.12); border-color: var(--line-strong); }
+.side-nav__cta[aria-current="page"] { border-color: var(--accent); }
+:root[data-mode="day"] .side-nav__cta { background: rgb(255 255 255 / 0.62); border-color: var(--line-strong); color: var(--accent-strong); }
+
+/* 「待你」入口（B4 的 QueueNav）紧贴在新开下面。 */
+.side-nav > :is(.queue-nav, [data-queue-nav]) { flex: none; }
+/* 昼：「待你」入口是一枚白色药丸（样稿），计数是金色圆点徽记；夜保持现状。 */
+:root[data-mode="day"] .side-nav .queue-nav { background: var(--surface-raised); box-shadow: var(--shadow-panel); }
+:root[data-mode="day"] .side-nav .queue-nav[aria-current="page"] { background: var(--paper-hi); box-shadow: var(--shadow-panel), inset 0 0 0 1.5px var(--accent-line); }
+:root[data-mode="day"] .side-nav .queue-nav-wrap:not(.is-compact) .queue-nav__count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--gold-top); color: var(--on-gold); font-size: 12px; line-height: 20px; }
+:root[data-mode="day"] .side-nav .queue-nav-wrap:not(.is-compact) .queue-nav.is-empty .queue-nav__count { background: var(--surface-sunken); color: var(--text-3); }
+
+/* 滚动区（归来 + 案头）自己滚，底下的钉住区与页脚不动；padding 给焦点环留位置。
+   导航与装饰的层次：装饰（白花海）在文字下面且不接事件，滚动区/钉住区/页脚都在它上面。 */
+.side-nav__scroll {
+  position: relative;
+  z-index: 1;
+  flex: 0 1 auto;               /* 内容短时不撑开（成品架/档案/行迹紧跟案头），内容长时收缩并自己滚 */
+  min-height: 64px;
+  margin: 0 calc(-1 * var(--sp-1));
+  padding: var(--sp-1);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.side-nav__pinned { position: relative; z-index: 1; flex: none; }
+.side-nav__spacer { flex: 1 1 0; min-height: 0; }
+.side-nav__pinned .side-nav__hr { margin: 4px 8px 6px; }
+.side-nav > .quota-bar, .side-nav > .side-nav__voice, .side-nav__footer { position: relative; z-index: 1; }
+.side-nav__list { display: flex; flex-direction: column; gap: 2px; }
+.side-nav__hr { height: 1px; background: var(--line); margin: 10px 8px; }
+
+.side-nav__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  text-align: left;
+  white-space: nowrap;
+  transition: background var(--dur-1) var(--ease), color var(--dur-1) var(--ease);
+}
+.side-nav__item > svg { flex: none; color: var(--text-3); transition: color var(--dur-1) var(--ease); }
+.side-nav__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-nav__item .side-nav__badge { margin-left: auto; flex: none; }
+.side-nav__item:hover:not(:disabled) { background: var(--surface-hover); color: var(--text); }
+.side-nav__item:hover:not(:disabled) > svg { color: var(--accent); }
+.side-nav__item.is-disabled { opacity: 0.62; cursor: default; }
+.side-nav__tag { margin-left: auto; padding: 0 6px; height: 16px; border-radius: 5px; font: 500 10.5px/16px var(--font-sans); letter-spacing: 0.04em; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--line-2); }
+
+/* 当前页：藕紫的底，左缘一根发色渐变的细竖条 */
+.side-nav__item[aria-current="page"],
+.side-nav__task[aria-current] { background: var(--surface-active); color: var(--accent-strong); font-weight: var(--fw-medium); }
+.side-nav__item[aria-current="page"] > svg { color: var(--accent-strong); }
+.side-nav__item[aria-current="page"]::after,
+.side-nav__task[aria-current]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  bottom: 7px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--hair-silver);
+}
+:root[data-mode="day"] .side-nav__item[aria-current="page"], :root[data-mode="day"] .side-nav__task[aria-current] { background: var(--paper); box-shadow: 0 1px 6px rgb(70 45 110 / 0.12); }
+
+/* 案头：任务按所在目录分组 */
+.side-nav__desk { display: flex; flex-direction: column; margin-top: 4px; }
+.side-nav__grp { display: flex; align-items: center; justify-content: space-between; margin: 12px 10px 4px; }
+.side-nav__grp h2 { font: 500 11.5px/16px var(--font-sans); letter-spacing: 0.14em; color: var(--text-3); }
+.side-nav__grp-link { font-size: 11.5px; color: var(--text-3); padding: 0 4px; border-radius: 4px; }
+.side-nav__grp-link:hover { color: var(--accent-strong); }
+.side-nav__empty { padding: 4px 10px; font-size: var(--fs-xs); color: var(--text-3); }
+.side-nav__proj-list { display: flex; flex-direction: column; gap: 0; }
+.side-nav__proj {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px 0 8px;
+  border-radius: 10px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  text-align: left;
+}
+.side-nav__proj > svg { flex: none; color: var(--text-3); }
+.side-nav__proj.is-open { color: var(--text); }
+.side-nav__proj:hover { background: var(--surface-hover); color: var(--text); }
+.side-nav__cnt { margin-left: auto; font-style: normal; font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+/* 子任务挂在一根细线上，每个节点一小截横枝 */
+.side-nav__kids { margin: 0 0 2px 17px; padding-left: 12px; border-left: 1.5px solid rgb(173 144 183 / 0.5); display: flex; flex-direction: column; }
+:root[data-mode="day"] .side-nav__kids { border-left-color: rgb(99 64 127 / 0.35); }
+.side-nav__task {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  text-align: left;
+  transition: background var(--dur-1) var(--ease);
+}
+.side-nav__task::before { content: ""; position: absolute; left: -12px; top: 50%; width: 8px; border-top: 1.5px solid rgb(173 144 183 / 0.5); }
+:root[data-mode="day"] .side-nav__task::before { border-top-color: rgb(99 64 127 / 0.35); }
+.side-nav__task:hover { background: var(--surface-hover); }
+.side-nav__task-ic { --c: var(--tone-neutral); display: inline-flex; flex: none; align-items: center; justify-content: center; width: 20px; color: var(--c); }
+.side-nav__task-ic[data-tone="running"] { --c: var(--tone-running); }
+.side-nav__task-ic[data-tone="success"] { --c: var(--tone-success); }
+.side-nav__task-ic[data-tone="warning"] { --c: var(--tone-warning); }
+.side-nav__task-ic[data-tone="danger"] { --c: var(--tone-danger); }
+.side-nav__task-ic[data-tone="paused"] { --c: var(--tone-paused); }
+.side-nav__bf { filter: drop-shadow(0 0 4px rgb(var(--blue-rgb) / 0.55)); }
+.side-nav__task-title { min-width: 0; flex: 1; }
+.side-nav__task-st { --c: var(--text-2); flex: none; font-size: 11.5px; color: var(--c); }
+.side-nav__task-st[data-tone="running"] { --c: var(--tone-running); }
+.side-nav__task-st[data-tone="success"] { --c: var(--accent-strong); }
+.side-nav__task-st[data-tone="warning"] { --c: var(--tone-warning); }
+.side-nav__task-st[data-tone="danger"] { --c: var(--tone-danger); }
+.side-nav__task-ic[data-laid="true"], .side-nav__task-st[data-laid="true"] { --c: var(--text-3); }
+.side-nav__more { padding: 2px 8px; font-size: var(--fs-xs); color: var(--text-3); text-align: left; border-radius: 6px; }
+.side-nav__more:hover { color: var(--accent-strong); }
+.side-nav__more--root { margin: 2px 8px 0; }
+
+/* 白花海：栏底的几朵白花，夹一两朵幽蓝的安提灵 */
+/* 行是一个 div（转场的入场动画挂在它上面）：svg 根元素上的 transform / opacity 动画合成器画不了（compositeFailed），包一层 div 就能上合成器 */
+.side-nav__sea { position: relative; z-index: 0; flex: none; display: block; width: calc(100% + 24px); height: 56px; margin: 0 -12px -4px; opacity: 0.92; pointer-events: none; }
+.side-nav__sea-svg { display: block; width: 100%; height: 100%; }
+
+/* 底部：她的话量、设置 */
+.side-nav__voice { flex: none; padding: 8px 6px 0; font-size: 12px; line-height: 18px; color: var(--text-2); }
+.side-nav__voice-row { display: flex; align-items: center; justify-content: space-between; margin-top: 2px; }
+.side-nav__voice-opts { display: inline-flex; gap: 10px; }
+.side-nav__voice-opts button { color: var(--text-3); padding: 0 2px 5px; border-radius: 3px; }
+.side-nav__voice-opts button.is-on { color: var(--accent-strong); font-weight: var(--fw-semibold); box-shadow: inset 0 -2px 0 var(--accent); }
+.side-nav__voice-opts button:hover:not(.is-on) { color: var(--text); }
+
+.side-nav__footer { flex: none; display: flex; flex-direction: column; gap: 4px; padding-top: 6px; }
+.side-nav__gear-wrap { position: relative; }
+.side-nav__gear {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 46px;
+  padding: 0 10px;
+  border-radius: 10px;
+  color: var(--text-2);
+  text-align: left;
+  transition: background var(--dur-1) var(--ease);
+}
+.side-nav__gear:hover, .side-nav__gear[aria-expanded="true"] { background: var(--surface-hover); color: var(--text); }
+.side-nav__gear.is-active { color: var(--accent-strong); }
+.side-nav__gear-text { display: flex; flex-direction: column; min-width: 0; line-height: 18px; white-space: nowrap; }
+.side-nav__gear-text b { font-weight: var(--fw-medium); font-size: 13px; }
+.side-nav__gear-text small { font-size: 11.5px; color: var(--text-3); }
+.side-nav__gear-text small.is-warn { color: var(--tone-warning); display: inline-flex; align-items: center; gap: 5px; }
+.side-nav__gear-text small.is-warn i { width: 6px; height: 6px; border-radius: 50%; background: var(--tone-warning); }
+.side-nav__gear-chev { margin-left: auto; color: var(--text-3); }
+.side-nav__gear-dot { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: var(--tone-warning); box-shadow: 0 0 0 2px var(--solid); }
+.side-nav__menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 30;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid var(--line-2);
+  border-radius: 12px;
+  background: var(--solid);
+  box-shadow: var(--shadow-pop);
+}
+.side-nav__menu-item { display: flex; align-items: center; gap: 10px; width: 100%; height: 34px; padding: 0 10px; border-radius: 8px; color: var(--text-2); font-size: 13.5px; text-align: left; }
+.side-nav__menu-item > svg { color: var(--text-3); flex: none; }
+.side-nav__menu-item .kbd { margin-left: auto; }
+.side-nav__menu-item:hover { background: var(--surface-hover); color: var(--text); }
+.side-nav__menu-item[aria-current="page"] { color: var(--accent-strong); background: var(--surface-active); }
+.side-nav__tools { display: flex; align-items: center; justify-content: flex-start; gap: 2px; padding: 0 2px; }
+.side-nav__tools .icon-btn { width: 30px; height: 30px; }
+
+/* 窗口不高时（常见笔记本 1366×768、1280×800），先让出装饰（白花海），再让出话量那两行，最后额度块收成一行；导航本身永远在。 */
+@media (max-height: 860px) { .side-nav__sea { display: none; } }
+@media (max-height: 740px) { .side-nav > .quota-bar { display: none; } }   /* 矮窗口：先收额度，话量那一行留着 */
+@media (max-height: 600px) { .side-nav__voice { display: none; } }
+
+/* ── compact: manually collapsed, or viewport < 960px (TSX sets data-compact for both) ── */
+.side-nav[data-compact="true"] { padding: 14px 8px 8px; align-items: center; }
+.side-nav[data-compact="true"] .side-nav__top,
+.side-nav[data-compact="true"] .side-nav__list,
+.side-nav[data-compact="true"] .side-nav__footer,
+.side-nav[data-compact="true"] .side-nav__tools { align-items: center; justify-content: center; }
+.side-nav[data-compact="true"] .side-nav__scroll { width: 100%; margin: 0; }
+.side-nav[data-compact="true"] .side-nav__tools { flex-direction: column; gap: 4px; }
+.side-nav[data-compact="true"] .side-nav__brand { padding: 0 0 10px; justify-content: center; width: auto; }
+/* Labels stay in the accessibility tree (names, tooltips) but are not drawn. */
+.side-nav[data-compact="true"] .side-nav__label,
+.side-nav[data-compact="true"] .side-nav__brandtext,
+.side-nav[data-compact="true"] .side-nav__cta-label,
+.side-nav[data-compact="true"] .side-nav__tag,
+.side-nav[data-compact="true"] .side-nav__gear-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.side-nav[data-compact="true"] .side-nav__cta { width: 40px; height: 40px; padding: 0; }
+.side-nav[data-compact="true"] .side-nav__item { width: 40px; height: 40px; padding: 0; justify-content: center; }
+.side-nav[data-compact="true"] .side-nav__item[aria-current="page"]::after { left: -8px; top: 10px; bottom: 10px; }
+.side-nav[data-compact="true"] .side-nav__gear { width: 40px; height: 40px; padding: 0; justify-content: center; }
+.side-nav[data-compact="true"] .side-nav__menu { left: 100%; right: auto; bottom: 0; margin-left: 8px; }
+/* Badges shrink to corner dots; the text alternative remains. */
+.side-nav[data-compact="true"] .side-nav__badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 0;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  font-size: 0;
+  color: transparent;
+  background: var(--c);
+  border: 2px solid var(--solid);
+  box-shadow: 0 0 6px color-mix(in srgb, var(--c) 60%, transparent);
+}
+.side-nav[data-compact="true"] .side-nav__badge.badge--danger { border-radius: 2px; transform: rotate(45deg); }
+.side-nav[data-compact="true"] .side-nav__badge.badge--warning { border-radius: 2px; }
+
+/* ── < 640px: 一条 52 px 高的单行顶栏 ──
+   [蝶标][＋][待你][归来 · 案头 · 行迹][⚙ · 夜昼 · 赏图]；成品架/档案（V1，禁用）、额度、话量、白花海都先让出。 */
+@media (max-width: 639px) {
+  .side-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 4px;
+    height: 52px;
+    padding: 0 10px;
+    overflow: visible;
+  }
+  .side-nav__top { flex-direction: row; align-items: center; gap: 4px; flex: none; }
+  .side-nav__brand, .side-nav[data-compact="true"] .side-nav__brand { width: auto; padding: 0; }
+  .side-nav__cta, .side-nav[data-compact="true"] .side-nav__cta { width: 36px; height: 36px; padding: 0; }
+  .side-nav > .queue-nav-wrap { flex: none; width: 40px; padding: 0; }
+  .side-nav__scroll, .side-nav__pinned { display: contents; }
+  .side-nav__spacer { display: none; }
+  .side-nav__list { flex-direction: row; align-items: center; gap: 2px; flex: none; }
+  .side-nav__hr, .side-nav__sea, .side-nav__voice, .side-nav > .quota-bar, .side-nav__item.is-disabled { display: none; }
+  .side-nav__footer { flex: none; flex-direction: row; align-items: center; gap: 2px; padding: 0; margin-left: auto; }
+  .side-nav__tools, .side-nav[data-compact="true"] .side-nav__tools { flex-direction: row; gap: 0; padding: 0; }
+  .side-nav__tools .icon-btn { width: 32px; height: 32px; }
+  .side-nav__gear, .side-nav[data-compact="true"] .side-nav__gear { width: 40px; height: 40px; }
+  /* 设置菜单从顶栏往下展开，右对齐 */
+  .side-nav__menu, .side-nav[data-compact="true"] .side-nav__menu { top: calc(100% + 6px); bottom: auto; left: auto; right: 0; margin: 0; min-width: 220px; }
+  .side-nav[data-compact="true"] .side-nav__item[aria-current="page"]::after { left: 8px; right: 8px; top: auto; bottom: -2px; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
+}
+@media (max-width: 479px) { .side-nav__peek { display: none; } }
+@media (max-width: 359px) { .side-nav__mode-btn, .side-nav__status-btn { display: none; } }
+
+/* ───────────── status panel ───────────── */
+/* 右栏：贴边、整高，一层稍实的烟色玻璃；顶部是她（夜：头像；昼：拱窗）与此刻的状态。 */
+
+.status-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: rgb(var(--glass-rgb) / calc(var(--glass-a, 0.5) + 0.22));
+  backdrop-filter: blur(calc(var(--blur) * 1.6)) saturate(1.1);
+  box-shadow: inset 1px 0 0 var(--line);
+}
+:root[data-wallpaper="off"] .status-panel { background: var(--solid); backdrop-filter: none; }
+/* 昼：右栏是一张奶油色的圆角卡（样稿 s2 的「灯与她」），顶部是她的拱窗。窄于 1280 时它是抽屉，不套这一层。 */
+@media (min-width: 1280px) {
+  :root[data-mode="day"] .status-panel {
+    margin: 8px 8px 8px 0;
+    border-radius: var(--r-lg);
+    background: rgb(253 251 247 / 0.92);
+    box-shadow: var(--shadow-paper), inset 0 0 0 1px rgb(255 255 255 / 0.55);
+    overflow: hidden;
+  }
+}
+
+.status-panel__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
+  border-bottom: 1px solid var(--line);
+}
+
+.status-panel__her { flex: none; display: flex; align-items: center; gap: 12px; padding: 18px 16px 12px; border-bottom: 1px solid var(--line); }
+.status-panel__her-text { min-width: 0; }
+.status-panel__her-name { margin: 0; font: 600 16px/22px var(--font-serif); letter-spacing: 0.14em; color: var(--text); }
+.status-panel__her-name small { margin-left: 6px; font: 400 12px var(--font-sans); letter-spacing: 0.04em; color: var(--text-3); }
+.status-panel__her-state { --c: var(--text-2); margin: 0; display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--c); }
+.status-panel__her-state[data-tone="running"] { --c: var(--tone-running); }
+.status-panel__her-state[data-tone="warning"] { --c: var(--tone-warning); }
+.status-panel__her-state[data-tone="success"] { --c: var(--tone-success); }
+.status-panel__her-state[data-tone="danger"] { --c: var(--tone-danger); }
+.status-panel__her-state b { font-weight: var(--fw-semibold); }
+.status-panel__her-bf { filter: drop-shadow(0 0 4px rgb(var(--blue-rgb) / 0.6)); }
+/* 她的龛、神色一路、控制卡：styles/shell-her.css（昼景拱窗宿主 .status-panel__arch 也在那里）。 */
+
+.status-panel__scroll {
+  position: relative; /* offsetParent for the scroll-to-approvals maths */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.status-panel__section {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  transition: box-shadow var(--dur-3) var(--ease);
+}
+.status-panel__section + .status-panel__section { border-top: 1px solid var(--line); }
+.status-panel__section:focus { outline: none; }
+.status-panel__section:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: var(--card-radius); }
+
+.status-panel__head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); min-height: 20px; }
+.status-panel__heading { display: inline-flex; align-items: center; min-width: 0; font-size: 13px; font-weight: var(--fw-semibold); letter-spacing: 0.03em; color: var(--text); }
+
+.status-panel__muted { font-size: var(--fs-xs); color: var(--text-3); }
+/* A model that cannot be used right now: said once, in the warning tone, above the facts. */
+.status-panel__alert { display: flex; align-items: flex-start; gap: 6px; font-size: var(--fs-sm); color: var(--tone-warning); overflow-wrap: anywhere; }
+.status-panel__alert svg { flex: none; margin-top: 3px; }
+.status-panel__skipped { margin-left: 4px; font-size: var(--fs-xs); color: var(--text-3); }
+/* base.css resets margins on p/ul/figure but not dl, so the UA's 1em block margin would leak in. */
+.status-panel .kv { margin: 0; }
+
+/* 运行 */
+.status-panel__viewing { display: flex; align-items: baseline; gap: 4px; min-width: 0; font-size: var(--fs-xs); color: var(--text-3); }
+.status-panel__viewing > span { flex: none; }
+.status-panel__run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+}
+.status-panel__runhead { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); }
+.status-panel__chip { display: inline-flex; }
+.status-panel__runno { font-size: var(--fs-sm); color: var(--text-2); font-variant-numeric: tabular-nums; margin-right: auto; }
+.status-panel__note { display: flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--tone-paused); }
+.status-panel__note svg { flex: none; }
+.status-panel__step {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+
+/* 活跃 Agent */
+.status-panel__agents { display: flex; flex-direction: column; gap: var(--sp-1); margin: 0 calc(-1 * var(--sp-2)); }
+.status-panel__agent {
+  --c: var(--tone-neutral);
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-3);
+  align-items: start;
+  padding: var(--sp-2);
+  border: 1px solid transparent;
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+}
+.status-panel__agent[data-tone="info"]    { --c: var(--tone-info); }
+.status-panel__agent[data-tone="running"] { --c: var(--tone-running); }
+.status-panel__agent[data-tone="success"] { --c: var(--tone-success); }
+.status-panel__agent[data-tone="warning"] { --c: var(--tone-warning); }
+.status-panel__agent[data-tone="danger"]  { --c: var(--tone-danger); }
+.status-panel__agent[data-tone="paused"]  { --c: var(--tone-paused); }
+.status-panel__agent.is-live {
+  border-color: color-mix(in srgb, var(--c) 34%, transparent);
+  background: color-mix(in srgb, var(--c) 8%, transparent);
+}
+.status-panel__agent > .status-panel__mark { margin-top: 1px; }
+/* 活跃 Agent 的头像：官方命途图标放在圆盘里（与 Agent 页的牌面同一套身份语言）；遐蝶那一行是她的头像. */
+.status-panel__mark { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-raised); box-shadow: inset 0 0 0 1px var(--line-2, var(--line)); }
+.status-panel__mark.is-her { border-radius: 22%; }
+.status-panel__mark-dot { position: absolute; right: -1px; bottom: -1px; width: 9px; height: 9px; border-radius: 50%; background: var(--c); box-shadow: 0 0 0 2px var(--solid, var(--surface-raised)); }
+.status-panel__mark-dot.is-live { animation: ff-breathe-dot var(--breathe, 2.4s) ease-in-out infinite; }
+:root[data-mode="day"] .status-panel__mark img[data-agent-mark] { filter: url(#panel-plum); }
+:root[data-mode="day"] .status-panel__mark img[data-agent-mark][data-state="busy"] { filter: url(#panel-plum) drop-shadow(0 0 3px var(--ring-work)); }
+:root[data-mode="night"] .status-panel__mark img[data-agent-mark][data-small] { filter: none; }
+:root[data-mode="night"] .status-panel__mark img[data-agent-mark][data-state="busy"] { filter: drop-shadow(0 0 3px var(--ring-work)); }
+.status-panel__agent-text, .status-panel__agent-model { text-wrap: pretty; }
+.status-panel__agent-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.status-panel__agent-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); }
+.status-panel__agent-name { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text); }
+.status-panel__agent-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  overflow-wrap: anywhere;
+}
+.status-panel__agent-model { font-family: var(--font-mono); font-size: var(--fs-2xs); color: var(--text-3); overflow-wrap: anywhere; }
+
+/* 模型 / 上下文 / Token */
+.status-panel__model { overflow-wrap: anywhere; }
+.status-panel__figure { display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; font-size: var(--fs-sm); color: var(--text); }
+.status-panel__warn { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--tone-warning); }
+.status-panel__warn.is-danger { color: var(--tone-danger); }
+.status-panel__stats { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin: 0; }
+.status-panel__stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line);
+  border-radius: var(--control-radius);
+  corner-shape: var(--corner);
+  background: var(--surface-sunken);
+}
+.status-panel__stat dt { font-size: var(--fs-2xs); color: var(--text-3); }
+.status-panel__stat dd { margin: 0; font-size: var(--fs-md); color: var(--text); }
+.status-panel__stat.is-total { border-color: var(--accent-line); }
+.status-panel__stat.is-total dd { color: var(--accent-strong); }
+.status-panel .sparkline { width: 100%; height: auto; }
+
+/* 待确认操作 */
+.status-panel__section--approvals.has-pending { background: linear-gradient(180deg, var(--gold-soft), transparent 140px); }
+.status-panel__section.is-flash { box-shadow: inset 0 0 0 1px var(--tone-warning), inset 0 0 28px -8px rgb(var(--gold-rgb) / 0.5); }
+.status-panel__approvals { display: flex; flex-direction: column; gap: var(--sp-3); }
+.status-panel__none { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-2); }
+.status-panel__none svg { flex: none; color: var(--tone-success); }
+
+/* 待批卡的样式在 engine-cards.css（.eng-ap，B3）。 */
+
+/* ───────────── toasts ───────────── */
+/* Position comes from two variables so the breakpoint rules below can never lose a specificity fight with the
+   base rule (they used to, which pushed the stack off-screen on phones). `--toast-lift` is set by ToastHost to
+   keep the stack above the workspace composer instead of over its input and Send button. */
+.toast-host {
+  /* Inside the main column: never over the status panel (where approvals live) … */
+  --toast-right: calc(var(--status-w) + var(--sp-3));
+  /* … and above the console bar, or above the open console. */
+  --toast-bottom: calc(var(--console-bar-h) + var(--gap-shell) + var(--sp-2));
+  position: fixed;
+  right: var(--toast-right);
+  bottom: calc(var(--toast-bottom) + var(--toast-lift, 0px));
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  width: min(380px, calc(100vw - 2 * var(--sp-4)));
+  pointer-events: none;
+}
+:root[data-console="open"] .toast-host { --toast-bottom: calc(var(--console-h) + var(--gap-shell) + var(--sp-2)); }
+
+/* 首页与「待你」整页没有右栏：提示条贴右缘。 */
+.app[data-status="off"] ~ .toast-host { --toast-right: var(--sp-4); }
+
+/* < 1280px the status panel is a drawer: the stack hugs the right edge, and steps left of the drawer while it is open. */
+@media (max-width: 1279px) {
+  .toast-host { --toast-right: calc(var(--gap-shell) + var(--sp-3)); }
+  .app[data-drawer="open"] ~ .toast-host {
+    --toast-right: calc(min(var(--status-w), 100vw) + var(--sp-3));
+  }}
+/* Phones: full width with a small margin, whatever the console is doing. */
+@media (max-width: 639px) {
+  .toast-host,
+  :root[data-console="open"] .toast-host,
+  .app[data-drawer="open"] ~ .toast-host {
+    --toast-bottom: var(--sp-3);
+    --toast-right: var(--sp-3);
+    left: var(--sp-3);
+    width: auto;
+  }}
+
+.toast {
+  --c: var(--tone-info);
+  --c-soft: var(--tone-info-soft);
+  pointer-events: auto;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2) var(--sp-3) var(--sp-4);
+  border: 1px solid color-mix(in srgb, var(--c) 38%, transparent);
+  border-radius: var(--card-radius);
+  corner-shape: var(--corner);
+  background: linear-gradient(90deg, var(--c-soft), transparent 72%), var(--solid);
+  box-shadow: var(--shadow-pop), inset 3px 0 0 var(--c);
+  animation: ff-fade-up var(--dur-3) var(--ease) both;
+}
+.toast--neutral { --c: var(--tone-neutral); --c-soft: var(--tone-neutral-soft); }
+.toast--running { --c: var(--tone-running); --c-soft: var(--tone-running-soft); }
+.toast--success { --c: var(--tone-success); --c-soft: var(--tone-success-soft); }
+.toast--warning { --c: var(--tone-warning); --c-soft: var(--tone-warning-soft); }
+.toast--danger  { --c: var(--tone-danger); --c-soft: var(--tone-danger-soft); border-style: dashed; }
+.toast--paused  { --c: var(--tone-paused); --c-soft: var(--tone-paused-soft); }
+
+.toast__icon { margin-top: 2px; color: var(--c); }
+.toast__mark { margin-top: -1px; }
+.toast__body { min-width: 0; }
+.toast__title { font-size: var(--fs-md); font-weight: var(--fw-semibold); line-height: var(--lh-tight); color: var(--text); }
+.toast__text { margin-top: 2px; font-size: var(--fs-sm); color: var(--text-2); overflow-wrap: anywhere; }
+.toast__actions { display: flex; gap: var(--sp-2); margin-top: var(--sp-2); }
+
+/* 任务完成: 藕紫的边，一只蓝闪蝶停在角上（静止；落蝶的动画在 Ambience 的 ButterflyLanding）。 */
+.toast--celebrate {
+  --c: var(--accent);
+  --c-soft: var(--accent-soft);
+  border-color: var(--accent-line);
+  box-shadow: var(--shadow-pop), inset 3px 0 0 var(--accent);
+}
+.toast__mark { margin-top: -2px; filter: drop-shadow(0 0 5px rgb(var(--blue-rgb) / 0.5)); }
+
+/* ───────────── 视图边界（ViewBoundary）：某一页没能显示时的提示 ───────────── */
+.view-error { display: grid; place-items: center; min-height: 60%; padding: var(--sp-6, 24px); }
+.view-error__detail { margin-top: var(--sp-3, 12px); text-align: left; font-size: var(--fs-xs); color: var(--text-3); }
+.view-error__detail summary { cursor: pointer; }
+.view-error__detail pre { margin: var(--sp-2, 8px) 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); color: var(--text-2); }

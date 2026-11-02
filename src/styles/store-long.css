@@ -1,0 +1,80 @@
+/* 长会话保护（V0α · 模块 B2「存储」）：对话页的分段渲染、向上翻页提示、工具输出的「展开全文」。
+   只用语义令牌；令牌还没定义时用回退值。 */
+
+/* ── 对话：分段渲染（只挂载可见窗口附近的行） ── */
+.ws-conv__log.cv-log { display: flex; flex-direction: column; gap: 0; }
+.cv-row { display: flex; flex-direction: column; min-width: 0; padding-bottom: var(--sp-3, 12px); }
+.cv-pad { flex: none; pointer-events: none; }
+
+/* 顶部：载入更早消息 */
+.cv-older {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2, 8px);
+  margin-bottom: var(--sp-3, 12px);
+  padding: 4px var(--sp-3, 12px);
+  border: 1px solid var(--line, rgb(255 255 255 / 0.12));
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-sunken, transparent);
+  color: var(--text-3, #8b8fa3);
+  font: inherit;
+  font-size: var(--fs-xs, 12px);
+}
+button.cv-older { cursor: pointer; }
+button.cv-older:hover { color: var(--text, inherit); border-color: var(--line-strong, var(--line, currentColor)); background: var(--surface-hover, var(--surface-sunken, transparent)); }
+button.cv-older:focus-visible { outline: 2px solid var(--accent, var(--mint, currentColor)); outline-offset: 2px; }
+
+/* 长消息的「展开剩余」 */
+.cv-longmore {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent, var(--mint, currentColor));
+  font: inherit;
+  font-size: var(--fs-xs, 12px);
+  cursor: pointer;
+}
+.cv-longmore:hover { text-decoration: underline; }
+.cv-longmore:focus-visible { outline: 2px solid var(--accent, var(--mint, currentColor)); outline-offset: 2px; border-radius: 3px; }
+
+/* ── 工具输出：折叠说明 ── */
+.so-block { display: flex; flex-direction: column; min-width: 0; }
+.so-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2, 8px) var(--sp-3, 12px);
+  margin: 4px 0 0;
+  color: var(--text-3, #8b8fa3);
+  font-size: var(--fs-xs, 12px);
+}
+.so-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--line, rgb(255 255 255 / 0.12));
+  border-radius: var(--r-sm, 6px);
+  background: var(--surface-raised, transparent);
+  color: var(--accent, var(--mint, currentColor));
+  font: inherit;
+  font-size: var(--fs-xs, 12px);
+  cursor: pointer;
+}
+.so-more:hover:not(:disabled) { border-color: var(--line-strong, var(--line, currentColor)); background: var(--surface-hover, var(--surface-raised, transparent)); }
+.so-more:disabled { cursor: progress; opacity: 0.7; }
+.so-more:focus-visible { outline: 2px solid var(--accent, var(--mint, currentColor)); outline-offset: 2px; }
+.so-spin { animation: so-spin 1s linear infinite; }
+@keyframes so-spin { to { transform: rotate(360deg); } }
+:root[data-motion="reduced"] .so-spin { animation: none; }
+@media (prefers-reduced-motion: reduce) { :root:not([data-motion="full"]) .so-spin { animation: none; } }
+
+/* 控制台：窗口外还有更早的条目 */
+.cv-more-rows {
+  display: flex;
+  justify-content: center;
+  padding: var(--sp-2, 8px) 0;
+}
